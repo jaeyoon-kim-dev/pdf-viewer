@@ -35,3 +35,5 @@
 ## Reader interaction refinements
 
 Use a compact Zotero-inspired toolbar and annotation sidebar. Editors and citation/figure previews open beside their source without a backdrop or blur. Support Fit width, Fit page, Actual size, and custom zoom (25–400%), with Cmd/Ctrl +/− and Cmd/Ctrl+0. Fit modes update when the reading viewport changes.
+
+Annotation tools must remain visible on narrow screens: a wrapping annotation bar provides labelled Memo, Question, Handwriting, and notebook access, while text selection stays mode-free.

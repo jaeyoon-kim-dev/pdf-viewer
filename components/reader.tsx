@@ -11,6 +11,8 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import type { PDFDocumentProxy } from 'pdfjs-dist';
 import {
   BookOpen,
+  Highlighter,
+  CircleHelp,
   ChevronLeft,
   ChevronRight,
   Minus,
@@ -560,20 +562,6 @@ export default function Reader({ paperId }: { paperId: string }) {
           <NativeSelectOption value="dark">Dark</NativeSelectOption>
         </NativeSelect>
         <div className="toolbar-spacer" />
-        <label className="pen-switch" htmlFor="pen-enabled">
-          <PenLine size={17} />
-          <span>Pen</span>
-          <Switch id="pen-enabled" checked={pen} onCheckedChange={setPen} />
-        </label>
-        <button
-          className="icon-button"
-          aria-label="Add page memo"
-          title="Add page memo"
-          disabled={!doc}
-          onClick={() => create({ page, kind: 'note' })}
-        >
-          <StickyNote size={18} />
-        </button>
         <button
           className={`icon-button ${offline ? 'is-active' : ''}`}
           aria-label={
@@ -594,6 +582,54 @@ export default function Reader({ paperId }: { paperId: string }) {
           onClick={() => setSidebar(!sidebar)}
         >
           <PanelRight size={19} />
+        </button>
+      </div>
+      <div
+        className="reader-annotation-bar"
+        role="toolbar"
+        aria-label="Annotation tools"
+      >
+        <span className="annotation-drag-hint">
+          <Highlighter size={17} />
+          <span>
+            Drag text to <strong>highlight or underline</strong>
+          </span>
+        </span>
+        <button
+          className="secondary-button"
+          disabled={!doc}
+          onClick={(e) =>
+            create({ page, kind: 'note' }, elementAnchor(e.currentTarget))
+          }
+        >
+          <StickyNote size={16} /> Memo
+        </button>
+        <button
+          className="secondary-button"
+          disabled={!doc}
+          onClick={(e) =>
+            create(
+              { page, kind: 'note', types: ['question'] },
+              elementAnchor(e.currentTarget),
+            )
+          }
+        >
+          <CircleHelp size={16} /> Question
+        </button>
+        <label className="pen-switch" htmlFor="pen-enabled">
+          <PenLine size={17} />
+          <span>Handwriting</span>
+          <Switch id="pen-enabled" checked={pen} onCheckedChange={setPen} />
+        </label>
+        <button
+          className="text-button"
+          aria-pressed={sidebar && panelTab === 'notes'}
+          onClick={() => {
+            setSidebar(true);
+            setPanelTab('notes');
+          }}
+        >
+          Annotations ({annotations.length})
         </button>
       </div>
       <div className="reader-body">
@@ -673,7 +709,7 @@ export default function Reader({ paperId }: { paperId: string }) {
         {sidebar && (
           <aside className="reader-sidebar">
             <div className="sidebar-heading">
-              <strong>Paper notebook</strong>
+              <strong>Annotations & references</strong>
               <button
                 className="icon-button"
                 aria-label="Close panel"

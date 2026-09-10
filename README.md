@@ -59,3 +59,5 @@ npm start
 - [Change log](CHANGELOG.md)
 
 Reader controls: Fit width, Fit page, Actual size, and custom zoom from 25–400%. Use Cmd/Ctrl + or − to zoom the PDF, and Cmd/Ctrl+0 for actual size. The compact toolbar and annotation sidebar follow a Zotero-inspired reading layout; reference previews and annotation editors are anchored, non-modal popovers without background blur.
+
+The always-visible annotation bar provides Memo, Question, Handwriting, and an Annotations count. Drag text to open highlight/underline controls; scanned pages without selectable text show a notice.

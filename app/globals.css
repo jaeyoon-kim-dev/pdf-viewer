@@ -1337,3 +1337,9 @@ textarea::placeholder {
 .reader-popover textarea { min-height: 80px; }
 .popover-close { position: absolute; top: 8px; right: 8px; }
 .reader-popover .figure-preview { max-height: 320px; object-fit: contain; }
+
+.reader-annotation-bar { display: flex; flex-wrap: wrap; flex-shrink: 0; align-items: center; gap: 8px 16px; padding: 8px 12px; background: var(--reader-ui); border-bottom: 1px solid var(--reader-border); font-size: 12px; }
+.annotation-drag-hint { display: flex; align-items: center; gap: 7px; margin-right: auto; }
+.reader-annotation-bar .secondary-button { display: inline-flex; align-items: center; gap: 6px; min-height: 30px; padding: 4px 9px; font-size: 12px; }
+.page-text-notice { position: absolute; bottom: 8px; left: 8px; right: 8px; z-index: 4; background: #fffbe9; color: #604a13; border: 1px solid #e5dba8; padding: 8px; font-size: 12px; pointer-events: none; }
+@media (max-width: 700px) { .annotation-drag-hint { width: 100%; } .reader-annotation-bar { gap: 8px 12px; } }

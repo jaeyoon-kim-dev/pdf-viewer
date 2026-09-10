@@ -391,6 +391,12 @@ export default function PdfPage(props: Props) {
         {(!painted || !active) && (
           <div className="page-placeholder">{error || `Page ${number}`}</div>
         )}
+        {active && text && text.words.length === 0 && (
+          <div className="page-text-notice">
+            No selectable text on this page. Use Memo, Question, or Handwriting
+            above.
+          </div>
+        )}
         <svg
           viewBox="0 0 1 1"
           preserveAspectRatio="none"

@@ -18,3 +18,9 @@ Initial local application:
 - PWA manifest, service worker, offline downloads, persistent edit outbox, revision conflict handling, and JSON export.
 - Node/SQLite/filesystem deployment, Docker volume, schema migrations, and backups.
 - Requirements, architecture, deployment guide, and explicit validation gaps.
+
+
+## Annotation discoverability — 2026-09-10
+
+- Added a wrapping annotation bar with labelled Memo, Question, Handwriting, and notebook access.
+- Added a notice on pages without selectable text.

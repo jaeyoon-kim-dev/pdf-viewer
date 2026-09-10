@@ -54,3 +54,5 @@ Manual acceptance sequence:
 - Offline availability depends on browser storage and a successful explicit download. Opening a never-cached route without a connection is not supported. Use one active editing tab per browser; cross-tab live updates are not implemented.
 - The library snapshot API returns the entire personal library. Large-library pagination and server-side search are future work.
 - The app has one owner/library. Authentication belongs at the local reverse proxy or private-network boundary; public multi-user deployment is outside scope.
+
+Manual follow-up: on desktop and narrow screens, verify the annotation bar is visible, Memo and Question open the editor, saving updates the annotation count, and a scanned page shows its text-selection limitation. Browser interaction validation remains outstanding.
