@@ -250,7 +250,7 @@ export default function AnnotationEditor({
       <label className="stack">
         Note
         <textarea
-          rows={4}
+          rows={3}
           maxLength={30000}
           value={draft.note}
           placeholder="What do you want to remember, ask, or explore?"

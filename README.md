@@ -73,3 +73,5 @@ The top toolbar includes a Continuous/Page toggle and a button for the hideable 
 Drag-select PDF text and press Cmd/Ctrl+C to copy it, or use Copy in the selection tooltip. Input fields retain normal copying. The Pages sidebar overlays saved highlights, underlines, ink and positioned sticky memos, with a per-page annotation count; changes and undo/redo update the thumbnails live.
 
 Hold Cmd (Mac) or Ctrl and scroll over the PDF to zoom around the pointer. Scroll up zooms in; scroll down zooms out. Ordinary scrolling stays unchanged. Wheel zoom switches to custom zoom within 25–400%.
+
+Reader panels and popovers use compact spacing: annotations are separated rows, controls remain visible, and touch devices keep larger action targets.

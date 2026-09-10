@@ -49,3 +49,5 @@ Selection tooltip layout: color palette on the left, Highlight/Underline/Note bu
 Custom PDF selections must support Cmd/Ctrl+C and a visible Copy action without native text selection or the iPad selection callout. Pages-sidebar previews must include saved annotations and reflect edit/delete/undo updates.
 
 Support Cmd/Ctrl+scroll over the PDF for zoom, preserving the point under the pointer and leaving unmodified scrolling available.
+
+Prefer dense reading UI with minimal redundant borders and padding, particularly in Annotations/References. Preserve readable text, visible actions, and touch target sizes.

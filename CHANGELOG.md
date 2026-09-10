@@ -64,3 +64,9 @@ Initial local application:
 ## Modifier-scroll zoom — 2026-09-10
 
 - Added Cmd/Ctrl+scroll to zoom the PDF around the pointer, with normalized wheel deltas and 25–400% bounds.
+
+## Compact reader panels — 2026-09-10
+
+- Replaced annotation cards with dense separated rows and compact edit/delete actions.
+- Reduced sidebar header/search/tab spacing, empty-state margins and popup padding.
+- Removed repeated quote/footer borders and retained larger touch action targets.

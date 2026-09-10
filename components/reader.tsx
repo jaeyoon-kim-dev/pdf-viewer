@@ -991,7 +991,7 @@ export default function Reader({ paperId }: { paperId: string }) {
           </div>
         </div>
         {sidebar && (
-          <aside className="reader-sidebar">
+          <aside className="reader-sidebar" aria-label="Annotations and references">
             <div className="sidebar-heading">
               <strong>Annotations & references</strong>
               <button
@@ -1057,31 +1057,34 @@ export default function Reader({ paperId }: { paperId: string }) {
                         ))}
                         {a.resolved && <span className="tag">Resolved</span>}
                       </div>
-                      <button
-                        className="text-button"
-                        onClick={(e) => {
-                          setEditingAnchor(elementAnchor(e.currentTarget));
-                          setEditing(a);
-                        }}
-                      >
-                        Edit note & collections
-                      </button>
-                      <button
-                        className="icon-button danger"
-                        aria-label={`Delete annotation on page ${a.page}`}
-                        title="Delete annotation (undo available)"
-                        onClick={() => {
-                          void save('annotations', a, true)
-                            .then(() =>
-                              setMessage(
-                                'Annotation deleted. Use Undo to restore it.',
-                              ),
-                            )
-                            .catch((e) => setError(String(e)));
-                        }}
-                      >
-                        <Trash2 size={16} />
-                      </button>
+                      <div className="sidebar-note-actions">
+                        <button
+                          className="text-button"
+                          aria-label="Edit note and collections"
+                          onClick={(e) => {
+                            setEditingAnchor(elementAnchor(e.currentTarget));
+                            setEditing(a);
+                          }}
+                        >
+                          Edit
+                        </button>
+                        <button
+                          className="icon-button danger"
+                          aria-label={`Delete annotation on page ${a.page}`}
+                          title="Delete annotation (undo available)"
+                          onClick={() => {
+                            void save('annotations', a, true)
+                              .then(() =>
+                                setMessage(
+                                  'Annotation deleted. Use Undo to restore it.',
+                                ),
+                              )
+                              .catch((e) => setError(String(e)));
+                          }}
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
                     </article>
                   ))
                 ) : (

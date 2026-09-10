@@ -1430,3 +1430,63 @@ textarea::placeholder {
 .selection-palette-row { flex-wrap: wrap; }
 .selection-style-buttons { min-height: 34px; height: auto !important; flex-shrink: 0; }
 .selection-style-buttons [data-slot='tabs-trigger'] { min-height: 28px; line-height: 20px; padding: 4px 7px; gap: 4px; font-size: 12px; }
+
+/* Dense reader panels: use space for content instead of nested cards. */
+.reader-sidebar .sidebar-heading, .document-sidebar .sidebar-heading { padding: 5px 8px 0; }
+.sidebar-heading strong { font-size: 13px; }
+.paper-search { margin: 4px 8px; }
+.paper-search input { padding: 5px 8px; font-size: 13px; }
+.panel-tabs { margin: 0 8px; width: calc(100% - 16px) !important; height: 32px !important; gap: 12px !important; }
+.panel-tabs [data-slot='tabs-trigger'] { padding: 5px 0; font-size: 12px; }
+.sidebar-items { padding: 4px 8px; }
+.sidebar-note { border: 0; border-bottom: 1px solid var(--reader-border); border-radius: 0; margin: 0; padding: 8px 2px; }
+.sidebar-note.selected { background: var(--accent); border-bottom-color: var(--primary); }
+.sidebar-note blockquote { border: 0; padding: 0; margin: 5px 0; font-size: 13px; line-height: 1.4; }
+.sidebar-note p { margin: 5px 0; font-size: 13px; line-height: 1.4; }
+.sidebar-note .tag-list:empty { display: none; }
+.sidebar-note .tag { padding: 1px 5px; font-size: 10px; border-radius: 3px; }
+.sidebar-note-actions { display: flex; align-items: center; justify-content: flex-end; gap: 5px; margin-top: 2px; }
+.sidebar-note-actions .text-button { margin: 0; padding: 3px 6px; }
+.sidebar-note-actions .icon-button { width: 26px; height: 26px; min-height: 26px; }
+.reference-list-item { padding: 7px 2px; }
+.reference-list-item p { margin-top: 3px; font-size: 12px; line-height: 1.4; }
+.reference-list-item .tag { border: 0; background: transparent; padding: 0; font-size: 11px; font-weight: 600; }
+.sidebar-empty { margin: 14px 4px; }
+.sidebar-empty svg { margin-bottom: 8px; }
+.sidebar-empty h2 { font-size: 14px; }
+.sidebar-empty p { font-size: 12px; line-height: 1.45; margin: 6px 0 10px; }
+.document-sidebar { width: 190px; }
+.document-navigation-tabs { margin: 4px 8px; width: calc(100% - 16px); }
+.document-navigation-content { padding: 5px 8px; }
+.outline-entries button { padding: 5px 2px; }
+.page-thumbnails { gap: 8px; }
+.reader-popover { padding: 10px; gap: 8px; border-radius: 4px; box-shadow: 0 2px 9px #0002; }
+.reader-popover .selected-quote { background: transparent; border: 0; padding: 0; font-family: inherit; font-size: 13px; line-height: 1.4; max-height: 72px; }
+.reader-popover textarea { min-height: 60px; padding: 6px 8px; font-size: 13px; }
+.reader-popover .stack { gap: 6px; }
+.reader-popover .type-option { min-height: 26px; font-size: 12px; gap: 6px; }
+.reader-popover .type-options { gap: 4px 12px; }
+.reader-popover .editor-footer { padding-top: 5px; border-top: 0; }
+.reader-popover .annotation-kinds { height: 34px !important; }
+.selection-tooltip { padding: 8px 10px; gap: 6px; }
+.selection-palette-row { padding-right: 23px; gap: 8px; }
+.selection-tooltip .popover-close { top: 4px; right: 4px; width: 24px; height: 24px; min-height: 24px; }
+.selection-collections { border-top: 0; padding-top: 0; }
+.reference-preview-popover { padding: 0 10px 8px; gap: 6px; }
+.scholar-card-header { padding: 7px 30px 7px 10px; margin: 0 -10px 2px; }
+.reference-preview-popover .scholar-card-title { min-height: 0; font-size: 15px; }
+.scholar-card-meta { min-height: 18px; }
+.scholar-card-abstract { min-height: 64px; font-size: 13px; line-height: 1.45; }
+.abstract-collapsed { -webkit-line-clamp: 3; }
+.scholar-card-access, .scholar-card-actions { gap: 5px 12px; }
+.scholar-card-access a, .scholar-card-access button { padding: 4px 8px; border-radius: 4px; }
+.scholar-card-detail { gap: 6px; padding-top: 7px; }
+.preview-loading-lines { gap: 5px; padding: 2px 0; }
+.preview-loading-lines span { height: 10px; }
+.wide-dialog { padding: 14px; gap: 10px; }
+.wide-dialog [data-slot='dialog-title'] { font-size: 18px; }
+@media (pointer: coarse) { .sidebar-note-actions .icon-button, .sidebar-note-actions .text-button { min-width: 34px; min-height: 34px; } .reader-popover .type-option { min-height: 32px; } }
+.reader-sidebar > .sidebar-heading { height: 0; padding: 0; position: relative; z-index: 1; }
+.reader-sidebar > .sidebar-heading strong { display: none; }
+.reader-sidebar > .sidebar-heading .icon-button { position: absolute; top: 4px; right: 6px; }
+.reader-sidebar .paper-search { margin: 5px 42px 4px 8px; }

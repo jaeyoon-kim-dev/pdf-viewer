@@ -70,3 +70,5 @@ Clipboard tests cover exact text, modern clipboard success, private HTTP fallbac
 Select-control follow-up: inspect all toolbar, library and citation-format dropdowns for clipped descenders; native selects now use a 20px line-height with 4px vertical padding. Verify three visible annotation-style buttons beside the palette, including wrapping on narrow screens. Typecheck, lint and production build are the checks for this UI-only change; browser validation remains outstanding.
 
 Wheel-zoom unit checks cover direction, zero delta, pixel/line/page normalization, bounded wheel increments and zoom limits. Manually check Cmd/Ctrl+wheel over the PDF, trackpad scrolling, pointer anchoring near page edges, transitions from fit modes, and normal scrolling without modifiers. Browser interaction validation remains outstanding.
+
+Compact-layout changes passed typecheck/lint and production Docker build. Manual visual checks remain needed for annotation/reference row density, popup spacing, dropdown text, narrow screen wrapping, and touch target usability. No new unit tests were added for this presentation-only change.
