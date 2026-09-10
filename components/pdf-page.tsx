@@ -4,6 +4,7 @@ import {
   rectAnchor,
   type ReaderAnchor,
 } from '@/lib/popover-anchor';
+import { StickyNote } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { PDFDocumentProxy, RenderTask } from 'pdfjs-dist';
 import type { Annotation, Point } from '@/lib/model';
@@ -29,8 +30,10 @@ type Props = {
   annotations: Annotation[];
   references: Reference[];
   pen: boolean;
+  placingMemo?: boolean;
   selected?: string;
   layout: string;
+  draft?: Annotation;
   onSelect: (
     value: Partial<Annotation> & { page: number },
     anchor?: ReaderAnchor,
@@ -261,7 +264,10 @@ export default function PdfPage(props: Props) {
       lastClient: { x: e.clientX, y: e.clientY },
       word,
       end: word,
-      kind: pen && e.pointerType !== 'touch' ? 'ink' : 'pending',
+      kind:
+        pen && !props.placingMemo && e.pointerType !== 'touch'
+          ? 'ink'
+          : 'pending',
       points: [p],
       moved: false,
       annotation,
@@ -288,6 +294,7 @@ export default function PdfPage(props: Props) {
     if (Math.hypot(dx, dy) > 5) g.moved = true;
     if (g.kind === 'pending' && g.moved)
       g.kind =
+        !props.placingMemo &&
         g.word >= 0 &&
         (e.pointerType === 'mouse' || Math.abs(dx) >= Math.abs(dy) * 0.65)
           ? 'select'
@@ -326,7 +333,19 @@ export default function PdfPage(props: Props) {
     const g = gesture.current;
     if (g && g.id !== e.pointerId) return;
     if (g && g.id === e.pointerId) {
-      if (g.kind === 'ink' && g.points.length > 1)
+      if (props.placingMemo && !g.moved) {
+        const p = point(e);
+        const rect = {
+          x: Math.min(0.98, p.x),
+          y: Math.min(0.98, p.y),
+          w: 0.02,
+          h: 0.02,
+        };
+        props.onSelect(
+          { page: number, kind: 'note', rects: [rect] },
+          wrapper.current ? rectAnchor(wrapper.current, rect) : undefined,
+        );
+      } else if (g.kind === 'ink' && g.points.length > 1)
         props.onSelect({
           page: number,
           kind: 'ink',
@@ -335,7 +354,7 @@ export default function PdfPage(props: Props) {
         });
       else if (g.kind === 'select' && text) {
         const selection = selectWords(text.words, g.word, g.end);
-        const rect = selection.rects.at(-1);
+        const rect = text.words[g.end] || selection.rects.at(-1);
         props.onSelect(
           { page: number, ...selection },
           rect && wrapper.current
@@ -373,7 +392,7 @@ export default function PdfPage(props: Props) {
     <div className="pdf-page-shell" style={{ width }} id={`page-${number}`}>
       <div
         ref={wrapper}
-        className="pdf-page"
+        className={`pdf-page ${props.placingMemo ? 'placing-memo' : ''}`}
         style={{ width, height }}
         onPointerDown={down}
         onPointerMove={move}
@@ -409,7 +428,7 @@ export default function PdfPage(props: Props) {
               id={`annotation-${a.id}`}
               className={props.selected === a.id ? 'focused-annotation' : ''}
             >
-              {a.rects.map((r, i) =>
+              {(a.kind === 'note' && !a.quote ? [] : a.rects).map((r, i) =>
                 a.kind === 'underline' ? (
                   <line
                     key={i}
@@ -444,7 +463,10 @@ export default function PdfPage(props: Props) {
               )}
             </g>
           ))}
-          {selection?.rects.map((r, i) => (
+          {(
+            selection?.rects ||
+            (props.draft?.page === number ? props.draft.rects : [])
+          )?.map((r, i) => (
             <rect
               key={i}
               x={r.x}
@@ -466,6 +488,24 @@ export default function PdfPage(props: Props) {
             />
           )}
         </svg>
+        {annotations
+          .filter((a) => a.kind === 'note' && !a.quote && a.rects.length > 0)
+          .map((a) => (
+            <button
+              key={a.id}
+              className="sticky-memo-pin"
+              aria-label={`Open sticky memo: ${a.note.slice(0, 80) || 'Note'}`}
+              title={a.note.slice(0, 120) || 'Open sticky memo'}
+              style={{
+                left: `${a.rects[0].x * 100}%`,
+                top: `${a.rects[0].y * 100}%`,
+                background: a.color,
+              }}
+              onClick={(e) => props.onEdit(a, elementAnchor(e.currentTarget))}
+            >
+              <StickyNote size={17} />
+            </button>
+          ))}
         {spots.map((spot, i) => (
           <button
             key={i}

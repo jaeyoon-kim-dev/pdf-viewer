@@ -13,7 +13,7 @@ Run the checks documented in README. Integration fixtures never populate the rea
 
 - `npm run typecheck`: passed.
 - `npm run lint`: passed.
-- `npm test`: 17 tests passed, including a real three-page PDF fixture and IndexedDB outbox scenarios.
+- `npm test`: 20 tests passed, including a real three-page PDF fixture and IndexedDB outbox scenarios.
 - `npm run build`: passed with React 19.2.8, Vinext 1.0.0-beta.9, Vite 8.0.16, and PDF.js 6.3.289.
 - `CROSSREF_LIVE=1 npm run test:integration`: passed, including a live DOI lookup through Crossref and forwarded HTTPS-origin handling.
 - `docker compose up -d --build --wait`: passed; container healthy and bound to the private Tailscale interface at `100.111.111.100:3080`.
@@ -56,3 +56,5 @@ Manual acceptance sequence:
 - The app has one owner/library. Authentication belongs at the local reverse proxy or private-network boundary; public multi-user deployment is outside scope.
 
 Manual follow-up: on desktop and narrow screens, verify the annotation bar is visible, Memo and Question open the editor, saving updates the annotation count, and a scanned page shows its text-selection limitation. Browser interaction validation remains outstanding.
+
+Latest annotation checks cover offline create/edit/delete undo and redo, restoring a synced tombstone revision, and clearing redo on a new action. Manual acceptance still required: drag text in both directions and release; confirm the toolbar remains next to the selection, click Highlight, refresh and confirm persistence, reopen/delete/undo; place sticky memos in page margins and reopen their pins. Test Cmd/Ctrl+Z outside and inside a textarea. No browser interaction testing was performed, so the reported tooltip issue is addressed in code but not yet verified in a browser.

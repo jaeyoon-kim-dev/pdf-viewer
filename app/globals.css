@@ -1343,3 +1343,16 @@ textarea::placeholder {
 .reader-annotation-bar .secondary-button { display: inline-flex; align-items: center; gap: 6px; min-height: 30px; padding: 4px 9px; font-size: 12px; }
 .page-text-notice { position: absolute; bottom: 8px; left: 8px; right: 8px; z-index: 4; background: #fffbe9; color: #604a13; border: 1px solid #e5dba8; padding: 8px; font-size: 12px; pointer-events: none; }
 @media (max-width: 700px) { .annotation-drag-hint { width: 100%; } .reader-annotation-bar { gap: 8px 12px; } }
+
+.selection-tooltip { width: max-content; max-width: calc(100vw - 24px); padding: 8px 34px 8px 8px; gap: 4px; }
+.selection-actions { display: flex; flex-wrap: wrap; gap: 2px; }
+.selection-actions button { display: flex; align-items: center; gap: 5px; padding: 7px; font-size: 12px; border-radius: 4px; }
+.selection-actions button:hover { background: var(--accent); }
+.selection-actions button:focus-visible { outline: 2px solid #2563eb; outline-offset: -2px; }
+@media (max-width: 480px) { .selection-actions { max-width: 270px; } }
+
+.memo-placement-hint { padding: 7px 12px; font-size: 12px; background: #fff6cb; color: #594614; }
+.placing-memo { cursor: crosshair; }
+.placing-memo .reference-hotspot, .placing-memo .sticky-memo-pin { pointer-events: none; }
+.sticky-memo-pin { position: absolute; z-index: 5; display: flex; align-items: center; justify-content: center; width: 26px; height: 26px; border: 1px solid #705b2399; border-radius: 3px; color: #302510; box-shadow: 0 1px 3px #0003; }
+.sticky-memo-pin:focus-visible { outline: 2px solid #2563eb; outline-offset: 2px; }

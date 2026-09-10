@@ -61,3 +61,5 @@ npm start
 Reader controls: Fit width, Fit page, Actual size, and custom zoom from 25–400%. Use Cmd/Ctrl + or − to zoom the PDF, and Cmd/Ctrl+0 for actual size. The compact toolbar and annotation sidebar follow a Zotero-inspired reading layout; reference previews and annotation editors are anchored, non-modal popovers without background blur.
 
 The always-visible annotation bar provides Memo, Question, Handwriting, and an Annotations count. Drag text to open highlight/underline controls; scanned pages without selectable text show a notice.
+
+Text selection opens a compact toolbar next to the drag endpoint. Highlight and Underline save immediately; Note, Phrase and Question expand the editor. The blue selection remains visible while the draft is open. To place a sticky memo, click Memo, then click/tap a page position; save the note and click its pin to reopen. Escape cancels placement. Delete is available in the notebook and editor. Cmd/Ctrl+Z undoes saved annotation changes, and Cmd/Ctrl+Shift+Z redoes them; text fields retain native undo. History holds the last 100 actions in the current tab session and is cleared by a full reload/navigation.

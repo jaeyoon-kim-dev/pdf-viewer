@@ -13,6 +13,9 @@ import {
   BookOpen,
   Highlighter,
   CircleHelp,
+  Undo2,
+  Redo2,
+  Trash2,
   ChevronLeft,
   ChevronRight,
   Minus,
@@ -33,7 +36,12 @@ import {
   NativeSelect,
   NativeSelectOption,
 } from '@/components/ui/native-select';
-import { useLibrary } from '@/lib/store';
+import {
+  useLibrary,
+  annotationHistory,
+  undoAnnotation,
+  redoAnnotation,
+} from '@/lib/store';
 import { loadPdf, pageText } from '@/lib/pdf';
 import { extractReferences, type Reference } from '@/lib/references';
 import type { Annotation } from '@/lib/model';
@@ -61,6 +69,7 @@ export default function Reader({ paperId }: { paperId: string }) {
   const [layout, setLayout] = useState<Layout>('continuous');
   const [theme, setTheme] = useState('light');
   const [pen, setPen] = useState(false);
+  const [placingMemo, setPlacingMemo] = useState(false);
   const [sidebar, setSidebar] = useState(true);
   const [panelTab, setPanelTab] = useState('notes');
   const [width, setWidth] = useState(850);
@@ -228,8 +237,44 @@ export default function Reader({ paperId }: { paperId: string }) {
     setFitMode('custom');
     setZoom(clampZoom(value));
   }, []);
+  const historyState = annotationHistory(paperId);
+  const replay = useCallback(
+    async (redo = false) => {
+      try {
+        const changed = await (redo
+          ? redoAnnotation(paperId)
+          : undoAnnotation(paperId));
+        if (changed) {
+          setEditing(undefined);
+          setMessage(
+            redo ? 'Annotation change redone.' : 'Annotation change undone.',
+          );
+        }
+      } catch (e) {
+        setError(String(e));
+      }
+    },
+    [paperId],
+  );
   useEffect(() => {
     const key = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setPlacingMemo(false);
+      if (
+        (e.metaKey || e.ctrlKey) &&
+        !e.altKey &&
+        e.key.toLowerCase() === 'z' &&
+        !(e.target as HTMLElement).closest(
+          'input,textarea,[contenteditable="true"]',
+        )
+      ) {
+        e.preventDefault();
+        if (editing && !data.annotations.some((a) => a.id === editing.id)) {
+          setEditing(undefined);
+          return;
+        }
+        void replay(e.shiftKey);
+        return;
+      }
       const action = zoomShortcut(e);
       if (action) {
         e.preventDefault();
@@ -259,9 +304,19 @@ export default function Reader({ paperId }: { paperId: string }) {
     };
     window.addEventListener('keydown', key);
     return () => window.removeEventListener('keydown', key);
-  }, [goto, layout, editing, preview, effectiveZoom, manualZoom]);
+  }, [
+    goto,
+    layout,
+    editing,
+    preview,
+    effectiveZoom,
+    manualZoom,
+    replay,
+    data.annotations,
+  ]);
   const create = useCallback(
     (value: Partial<Annotation> & { page: number }, anchor?: ReaderAnchor) => {
+      setPlacingMemo(false);
       setEditingAnchor(anchor);
       setPreview(undefined);
       const a: Annotation = {
@@ -589,6 +644,24 @@ export default function Reader({ paperId }: { paperId: string }) {
         role="toolbar"
         aria-label="Annotation tools"
       >
+        <button
+          className="icon-button"
+          aria-label="Undo annotation"
+          title="Undo annotation (⌘/Ctrl+Z)"
+          disabled={!historyState.canUndo}
+          onClick={() => replay()}
+        >
+          <Undo2 size={17} />
+        </button>
+        <button
+          className="icon-button"
+          aria-label="Redo annotation"
+          title="Redo annotation (⌘/Ctrl+Shift+Z)"
+          disabled={!historyState.canRedo}
+          onClick={() => replay(true)}
+        >
+          <Redo2 size={17} />
+        </button>
         <span className="annotation-drag-hint">
           <Highlighter size={17} />
           <span>
@@ -598,11 +671,14 @@ export default function Reader({ paperId }: { paperId: string }) {
         <button
           className="secondary-button"
           disabled={!doc}
-          onClick={(e) =>
-            create({ page, kind: 'note' }, elementAnchor(e.currentTarget))
-          }
+          aria-pressed={placingMemo}
+          onClick={() => {
+            setPlacingMemo((value) => !value);
+            setPen(false);
+            setEditing(undefined);
+          }}
         >
-          <StickyNote size={16} /> Memo
+          <StickyNote size={16} /> {placingMemo ? 'Cancel memo' : 'Memo'}
         </button>
         <button
           className="secondary-button"
@@ -619,7 +695,14 @@ export default function Reader({ paperId }: { paperId: string }) {
         <label className="pen-switch" htmlFor="pen-enabled">
           <PenLine size={17} />
           <span>Handwriting</span>
-          <Switch id="pen-enabled" checked={pen} onCheckedChange={setPen} />
+          <Switch
+            id="pen-enabled"
+            checked={pen}
+            onCheckedChange={(value) => {
+              setPen(value);
+              setPlacingMemo(false);
+            }}
+          />
         </label>
         <button
           className="text-button"
@@ -632,6 +715,12 @@ export default function Reader({ paperId }: { paperId: string }) {
           Annotations ({annotations.length})
         </button>
       </div>
+      {placingMemo && (
+        <output className="memo-placement-hint">
+          Click or tap anywhere on a page to place a sticky memo. Press Escape
+          to cancel.
+        </output>
+      )}
       <div className="reader-body">
         <div
           ref={scroller}
@@ -676,8 +765,14 @@ export default function Reader({ paperId }: { paperId: string }) {
                 annotations={annotations.filter((a) => a.page === n)}
                 references={references}
                 pen={pen}
+                placingMemo={placingMemo}
                 selected={selected}
                 layout={layout}
+                draft={
+                  editing && !data.annotations.some((a) => a.id === editing.id)
+                    ? editing
+                    : undefined
+                }
                 onSelect={create}
                 onEdit={(a, anchor) => {
                   setEditingAnchor(anchor);
@@ -781,6 +876,22 @@ export default function Reader({ paperId }: { paperId: string }) {
                         }}
                       >
                         Edit note & collections
+                      </button>
+                      <button
+                        className="icon-button danger"
+                        aria-label={`Delete annotation on page ${a.page}`}
+                        title="Delete annotation (undo available)"
+                        onClick={() => {
+                          void save('annotations', a, true)
+                            .then(() =>
+                              setMessage(
+                                'Annotation deleted. Use Undo to restore it.',
+                              ),
+                            )
+                            .catch((e) => setError(String(e)));
+                        }}
+                      >
+                        <Trash2 size={16} />
                       </button>
                     </article>
                   ))

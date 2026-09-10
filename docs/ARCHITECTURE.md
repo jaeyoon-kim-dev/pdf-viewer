@@ -70,3 +70,11 @@ A feature-detected WebMCP surface exposes page navigation and page-note creation
 `reader-view.ts` calculates width/height fitting with spread spacing and page-label allowance. Actual size maps PDF points to CSS pixels at 96/72. Custom zoom is clamped to 25–400%; fit modes can exceed those custom limits. The first page supplies document sizing, so mixed-size documents may not fit every page exactly. Keyboard zoom is intercepted only with Command/Control; ordinary typing remains available.
 
 The annotation toolbar wraps independently of viewing controls. Memo and Question create page-linked annotations through the same editor; Question presets the existing question collection. Pages with zero extracted words show an explanation instead of silently offering unavailable text selection.
+
+The selection toolbar anchors to the endpoint word, including reverse drags. Reader state retains an unsaved annotation overlay after pointer-up. Non-modal popovers ignore outside/focus dismissal until a subsequent pointer-down, preventing the opening gesture's trailing click from dismissing them. Highlight/Underline are immediate save actions; notes and collection editing expand in place.
+
+Sticky memos use existing note records with an empty quote and a normalized position rectangle; no schema migration is needed. Pin buttons open their editor. Placement is a one-shot action and does not change normal text annotation. Existing page-level notes remain supported.
+
+Annotation writes are serialized and record a bounded in-memory before/after history. Undo and redo reuse the persistent outbox, preserving record IDs and acknowledged deletion revisions. The current paper scopes history replay. Conflicting or externally changed local records block replay; server-side optimistic concurrency remains active. History itself is not persisted across reloads.
+
+Google Scholar investigation (2026-09-10): https://github.com/salcc/Scholar-PDF-Reader-with-Annotations bundles a Chromium extension with extension-specific permissions. No license for the bundled reader was verified (the tree contains a bcmap license, not a general reader license). No code was copied. Paperthread citation metadata still uses Crossref and local reference extraction; it does not reproduce Scholar's backend.

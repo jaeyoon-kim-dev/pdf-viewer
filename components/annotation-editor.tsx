@@ -7,6 +7,8 @@ import {
   PenLine,
   Trash2,
   Link2,
+  CircleHelp,
+  Quote,
 } from 'lucide-react';
 import { PopoverTitle, PopoverDescription } from '@/components/ui/popover';
 import ReaderPopover from './reader-popover';
@@ -33,15 +35,17 @@ export default function AnnotationEditor({
   onClose: () => void;
   anchor?: ReaderAnchor;
 }) {
-  const { save } = useLibrary();
+  const { data, save } = useLibrary();
+  const saved = data.annotations.some((a) => a.id === annotation.id);
   const [draft, setDraft] = useState(annotation);
+  const [expanded, setExpanded] = useState(saved || !annotation.quote);
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
-  async function submit(deleted = false) {
+  async function submit(deleted = false, value = draft) {
     setBusy(true);
     try {
-      await save('annotations', draft, deleted);
+      await save('annotations', value, deleted);
       onClose();
     } catch (e) {
       setError(String(e));
@@ -49,14 +53,82 @@ export default function AnnotationEditor({
       setBusy(false);
     }
   }
+  if (!expanded)
+    return (
+      <ReaderPopover
+        anchor={anchor}
+        onClose={onClose}
+        side="top"
+        className="selection-tooltip"
+      >
+        <PopoverTitle className="sr-only">Annotate selected text</PopoverTitle>
+        <PopoverDescription className="sr-only">
+          Choose a mark to save immediately, or add a note or collection.
+        </PopoverDescription>
+        <div
+          className="selection-actions"
+          role="toolbar"
+          aria-label="Selected text actions"
+        >
+          <button
+            disabled={busy}
+            onClick={() => submit(false, { ...draft, kind: 'highlight' })}
+          >
+            <Highlighter size={17} />
+            Highlight
+          </button>
+          <button
+            disabled={busy}
+            onClick={() => submit(false, { ...draft, kind: 'underline' })}
+          >
+            <Underline size={17} />
+            Underline
+          </button>
+          <button onClick={() => setExpanded(true)}>
+            <StickyNote size={17} />
+            Note
+          </button>
+          <button
+            onClick={() => {
+              setDraft({
+                ...draft,
+                types: [...new Set([...draft.types, 'phrase'])],
+              });
+              setExpanded(true);
+            }}
+          >
+            <Quote size={17} />
+            Phrase
+          </button>
+          <button
+            onClick={() => {
+              setDraft({
+                ...draft,
+                types: [...new Set([...draft.types, 'question'])],
+              });
+              setExpanded(true);
+            }}
+          >
+            <CircleHelp size={17} />
+            Question
+          </button>
+        </div>
+        {error && (
+          <p role="alert" className="error">
+            {error}
+          </p>
+        )}
+      </ReaderPopover>
+    );
   return (
     <ReaderPopover
       anchor={anchor}
       onClose={onClose}
+      side="top"
       className="annotation-editor-popover"
     >
       <PopoverTitle>
-        {annotation.revision ? 'Edit annotation' : 'Keep this thought'}
+        {saved ? 'Edit annotation' : 'Keep this thought'}
       </PopoverTitle>
       <PopoverDescription>
         Page {draft.page} · Your note and collections stay linked to this spot.
@@ -139,7 +211,7 @@ export default function AnnotationEditor({
       )}
       <div className="editor-footer">
         <div className="button-row">
-          {annotation.revision > 0 && (
+          {saved && (
             <button
               className="icon-button danger"
               aria-label="Delete annotation"

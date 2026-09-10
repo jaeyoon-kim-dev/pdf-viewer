@@ -37,3 +37,5 @@
 Use a compact Zotero-inspired toolbar and annotation sidebar. Editors and citation/figure previews open beside their source without a backdrop or blur. Support Fit width, Fit page, Actual size, and custom zoom (25–400%), with Cmd/Ctrl +/− and Cmd/Ctrl+0. Fit modes update when the reading viewport changes.
 
 Annotation tools must remain visible on narrow screens: a wrapping annotation bar provides labelled Memo, Question, Handwriting, and notebook access, while text selection stays mode-free.
+
+Selecting text must retain the selection until a compact, source-anchored toolbar action saves it or the user dismisses it. Do not let the pointer gesture that opens a tooltip immediately dismiss it. Sticky memos can be placed at arbitrary page coordinates and expanded by clicking their pins. Annotation deletion and session Undo/Redo are required.

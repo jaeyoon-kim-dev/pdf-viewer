@@ -1,7 +1,14 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import 'fake-indexeddb/auto';
-import { saveRecord, pendingEdits, syncPending } from '../lib/store.ts';
+import {
+  saveRecord,
+  pendingEdits,
+  syncPending,
+  undoAnnotation,
+  redoAnnotation,
+  annotationHistory,
+} from '../lib/store.ts';
 import type { Annotation } from '../lib/model.ts';
 const annotation = (id: string): Annotation => ({
   id,
@@ -93,4 +100,56 @@ void test('server conflicts retain the full local edit for manual resolution', a
   const pending = (await pendingEdits()).find((x) => x.value.id === 'conflict');
   assert.equal(pending?.error, 'Changed on another device');
   assert.equal((pending!.value as Annotation).note, 'First');
+});
+
+void test('annotation undo and redo preserve offline creation, edits and deletion', async () => {
+  online(false);
+  const a = { ...annotation('history'), paperId: 'history-paper' };
+  const pending = async () =>
+    (await pendingEdits()).find((x) => x.value.id === a.id)!;
+  await saveRecord('annotations', a);
+  assert.equal(annotationHistory(a.paperId).canUndo, true);
+  await undoAnnotation(a.paperId);
+  assert.equal((await pending()).deleted, true);
+  await redoAnnotation(a.paperId);
+  assert.equal((await pending()).deleted, false);
+  await saveRecord('annotations', { ...a, note: 'Edited' });
+  await undoAnnotation(a.paperId);
+  assert.equal(((await pending()).value as Annotation).note, 'First');
+  await redoAnnotation(a.paperId);
+  assert.equal(((await pending()).value as Annotation).note, 'Edited');
+  await saveRecord('annotations', { ...a, note: 'Edited' }, true);
+  await undoAnnotation(a.paperId);
+  assert.equal((await pending()).deleted, false);
+  assert.equal(((await pending()).value as Annotation).note, 'Edited');
+});
+void test('undo restores a synchronized deletion using its acknowledged tombstone revision', async () => {
+  online(false);
+  const a = { ...annotation('restore'), paperId: 'restore-paper' };
+  globalThis.fetch = async (_url, options) => {
+    const value = JSON.parse(
+      typeof options?.body === 'string' ? options.body : '{}',
+    );
+    return Response.json({ ...value, revision: value.revision + 1 });
+  };
+  await saveRecord('annotations', a);
+  online(true);
+  await syncPending();
+  await saveRecord('annotations', { ...a, revision: 1 }, true);
+  await syncPending();
+  online(false);
+  await undoAnnotation(a.paperId);
+  const restored = (await pendingEdits()).find((x) => x.value.id === a.id)!;
+  assert.equal(restored.deleted, false);
+  assert.equal(restored.value.revision, 2);
+  assert.equal((restored.value as Annotation).note, 'First');
+});
+void test('new annotation edits clear redo history', async () => {
+  online(false);
+  const a = { ...annotation('redo-reset'), paperId: 'redo-reset-paper' };
+  await saveRecord('annotations', a);
+  await undoAnnotation(a.paperId);
+  assert.equal(annotationHistory(a.paperId).canRedo, true);
+  await saveRecord('annotations', { ...a, id: 'different' });
+  assert.equal(annotationHistory(a.paperId).canRedo, false);
 });

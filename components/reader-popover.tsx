@@ -1,5 +1,5 @@
 'use client';
-import { useState, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { Popover as Primitive } from '@base-ui/react/popover';
 import { Popover } from '@/components/ui/popover';
 import { X } from 'lucide-react';
@@ -9,12 +9,24 @@ export default function ReaderPopover({
   onClose,
   children,
   className = '',
+  side = 'bottom',
 }: {
   anchor?: ReaderAnchor;
   onClose: () => void;
   children: ReactNode;
   className?: string;
+  side?: 'top' | 'bottom';
 }) {
+  // A pointer-up can mount this popover before the same gesture's click arrives.
+  // Only a subsequent pointer-down may begin an outside-click dismissal.
+  const outsideArmed = useRef(false);
+  useEffect(() => {
+    const arm = () => {
+      outsideArmed.current = true;
+    };
+    document.addEventListener('pointerdown', arm, true);
+    return () => document.removeEventListener('pointerdown', arm, true);
+  }, []);
   const [fallback] = useState(() =>
     document.activeElement && document.activeElement !== document.body
       ? elementAnchor(document.activeElement)
@@ -24,7 +36,16 @@ export default function ReaderPopover({
     <Popover
       open
       modal={false}
-      onOpenChange={(open) => {
+      onOpenChange={(open, details) => {
+        if (
+          !open &&
+          (details.reason === 'outside-press' ||
+            details.reason === 'focus-out') &&
+          !outsideArmed.current
+        ) {
+          details.cancel();
+          return;
+        }
         if (!open) onClose();
       }}
     >
@@ -32,7 +53,7 @@ export default function ReaderPopover({
         <Primitive.Positioner
           anchor={anchor || fallback}
           positionMethod="fixed"
-          side="bottom"
+          side={side}
           align="start"
           sideOffset={8}
           collisionPadding={12}

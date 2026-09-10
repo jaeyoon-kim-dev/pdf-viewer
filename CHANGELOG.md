@@ -24,3 +24,10 @@ Initial local application:
 
 - Added a wrapping annotation bar with labelled Memo, Question, Handwriting, and notebook access.
 - Added a notice on pages without selectable text.
+
+## Selection tooltips, sticky memos and undo — 2026-09-10
+
+- Compact actions beside the selection endpoint, with retained draft selection and protection against dismissal by the opening click.
+- One-click highlights/underlines; expandable notes, phrases and questions.
+- Place sticky memos anywhere on a page and reopen them from their pins.
+- Visible notebook deletion and session Cmd/Ctrl+Z / Cmd/Ctrl+Shift+Z undo/redo, including offline edits and synced deletions.

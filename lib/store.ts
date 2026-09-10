@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import {
   EMPTY_LIBRARY,
   type LibraryData,
+  type Annotation,
   type RecordKind,
   type SavedRecord,
 } from './model.ts';
@@ -129,7 +130,7 @@ export function refreshLibrary() {
   })());
 }
 let syncing: Promise<void> | undefined;
-export async function saveRecord(
+async function applyRecord(
   kind: RecordKind,
   value: SavedRecord,
   deleted = false,
@@ -155,6 +156,93 @@ export async function saveRecord(
   emit();
   void syncPending();
 }
+type AnnotationChange = {
+  before?: Annotation;
+  after?: Annotation;
+  source: Annotation;
+};
+const undoStack: AnnotationChange[] = [];
+const redoStack: AnnotationChange[] = [];
+const deletedRevisions = new Map<string, number>();
+let annotationQueue: Promise<unknown> = Promise.resolve();
+function serializeAnnotation<T>(action: () => Promise<T>): Promise<T> {
+  const result = annotationQueue.then(action, action);
+  annotationQueue = result.catch(() => {});
+  return result;
+}
+export function saveRecord(
+  kind: RecordKind,
+  value: SavedRecord,
+  deleted = false,
+) {
+  if (kind !== 'annotations') return applyRecord(kind, value, deleted);
+  return serializeAnnotation(async () => {
+    const before = snapshot.annotations.find((a) => a.id === value.id);
+    await applyRecord(kind, value, deleted);
+    undoStack.push({
+      before: before && structuredClone(before),
+      after: deleted ? undefined : structuredClone(value as Annotation),
+      source: structuredClone(value as Annotation),
+    });
+    if (undoStack.length > 100) undoStack.shift();
+    redoStack.length = 0;
+    emit();
+  });
+}
+export function annotationHistory(paperId: string) {
+  return {
+    canUndo: undoStack.some((x) => x.source.paperId === paperId),
+    canRedo: redoStack.some((x) => x.source.paperId === paperId),
+  };
+}
+function sameAnnotation(a?: Annotation, b?: Annotation) {
+  if (!a || !b) return a === b;
+  const normalize = (value: Annotation) =>
+    JSON.stringify(
+      Object.entries(value)
+        .filter(([key]) => key !== 'revision')
+        .sort(([a], [b]) => a.localeCompare(b)),
+    );
+  return normalize(a) === normalize(b);
+}
+function replayAnnotation(paperId: string, redo: boolean) {
+  return serializeAnnotation(async () => {
+    const from = redo ? redoStack : undoStack;
+    const to = redo ? undoStack : redoStack;
+    const index = from.findLastIndex((x) => x.source.paperId === paperId);
+    if (index < 0) return false;
+    const change = from[index];
+    const expected = redo ? change.before : change.after;
+    const desired = redo ? change.after : change.before;
+    const current = snapshot.annotations.find((a) => a.id === change.source.id);
+    const pending = (await allPending()).find(
+      (x) => x.key === `annotations/${change.source.id}`,
+    );
+    if (pending?.error || !sameAnnotation(current, expected))
+      throw new Error(
+        'This annotation changed elsewhere. Resolve its sync conflict before undoing.',
+      );
+    const revision =
+      pending?.value.revision ??
+      current?.revision ??
+      deletedRevisions.get(change.source.id) ??
+      change.source.revision;
+    await applyRecord(
+      'annotations',
+      { ...(desired || change.source), revision },
+      !desired,
+    );
+    from.splice(index, 1);
+    to.push(change);
+    emit();
+    return true;
+  });
+}
+export const undoAnnotation = (paperId: string) =>
+  replayAnnotation(paperId, false);
+export const redoAnnotation = (paperId: string) =>
+  replayAnnotation(paperId, true);
+
 export function syncPending() {
   return (syncing ||= (async () => {
     try {
@@ -197,6 +285,8 @@ export function syncPending() {
           continue;
         }
         const saved = (await response.json()) as SavedRecord;
+        if (op.kind === 'annotations' && op.deleted)
+          deletedRevisions.set(op.value.id, saved.revision);
         const latest = await amendPending(op.key, (current) => {
           if (!current || current.nonce === op.nonce) return undefined;
           return {
