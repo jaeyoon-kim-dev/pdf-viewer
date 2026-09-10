@@ -17,7 +17,7 @@ For iPad access, put the app behind HTTPS on your local network or private VPN. 
 - Upload searchable PDFs up to 40 MB; permanent `/papers/<uuid>` URLs and database-backed last reading positions. In-app collection links jump to their source.
 - Paper titles and tags, library search, tag filtering.
 - Continuous vertical, continuous horizontal, single-page, and two-page layouts; zoom, text search, light/dark/sepia themes.
-- Drag text to highlight, underline, or create a memo. Pen toggle enables handwriting. Every annotation supports a note and any number of collection types.
+- Click a word or drag text to highlight, underline, or create a memo. Mouse selection appears on press; live updates are paced to display frames. Pen toggle enables handwriting. Every annotation supports a note and any number of collection types.
 - Built-in Phrases and Questions, plus user-created types such as Ideas and Limitations. Questions can be marked resolved.
 - In-place previews for recognized citations and figures/tables. Citation information is looked up through Crossref, with possible matches explicitly labeled.
 - Save/unsave toggle for Read later inside reference previews. The reading list groups matched works and retains source backlinks.

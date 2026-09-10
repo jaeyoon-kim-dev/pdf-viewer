@@ -5,6 +5,7 @@ import {
   type ReaderAnchor,
 } from '@/lib/popover-anchor';
 import HighlightLayer from './highlight-layer';
+import SelectionLayer, { type SelectionLayerHandle } from './selection-layer';
 import { StickyNote } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { PDFDocumentProxy, RenderTask } from 'pdfjs-dist';
@@ -69,7 +70,7 @@ export default function PdfPage(props: Props) {
   const [error, setError] = useState('');
   const [painted, setPainted] = useState(false);
   const [nativeSpots, setNativeSpots] = useState<Hotspot[]>([]);
-  const [selection, setSelection] = useState<ReturnType<typeof selectWords>>();
+  const selectionLayer = useRef<SelectionLayerHandle>(null);
   const [ink, setInk] = useState<Point[]>([]);
   const gesture = useRef<Gesture | undefined>(undefined);
   const pointers = useRef(new Map<number, { x: number; y: number }>());
@@ -287,7 +288,7 @@ export default function PdfPage(props: Props) {
     }
     if (pointers.current.size > 1) {
       gesture.current = undefined;
-      setSelection(undefined);
+      selectionLayer.current?.clear();
       setInk([]);
       const ps = [...pointers.current.values()];
       pinch.current = Math.hypot(ps[0].x - ps[1].x, ps[0].y - ps[1].y);
@@ -311,12 +312,16 @@ export default function PdfPage(props: Props) {
       kind:
         pen && !props.placingMemo && e.pointerType !== 'touch'
           ? 'ink'
-          : 'pending',
+          : !props.placingMemo && e.pointerType === 'mouse' && word >= 0
+            ? 'select'
+            : 'pending',
       points: [p],
       moved: false,
       annotation,
     };
-    setSelection(undefined);
+    selectionLayer.current?.clear();
+    if (gesture.current.kind === 'select' && text)
+      selectionLayer.current?.select(text.words, word, word, true);
     setInk([]);
     e.preventDefault();
   }
@@ -345,7 +350,7 @@ export default function PdfPage(props: Props) {
           : 'scroll';
     if (g.kind === 'select' && text) {
       g.end = hitWord(text.words, p.x, p.y, true);
-      setSelection(selectWords(text.words, g.word, g.end));
+      selectionLayer.current?.select(text.words, g.word, g.end);
     }
     if (g.kind === 'ink') {
       if (g.points.length < 9000) {
@@ -396,7 +401,16 @@ export default function PdfPage(props: Props) {
           points: g.points,
           color: '#60a5fa',
         });
+      else if (!g.moved && g.annotation && g.kind !== 'ink')
+        props.onEdit(
+          g.annotation,
+          wrapper.current && g.annotation.rects[0]
+            ? rectAnchor(wrapper.current, g.annotation.rects[0])
+            : undefined,
+        );
       else if (g.kind === 'select' && text) {
+        const endpoint = point(e);
+        g.end = hitWord(text.words, endpoint.x, endpoint.y, true);
         const selection = selectWords(text.words, g.word, g.end);
         const rect = text.words[g.end] || selection.rects.at(-1);
         props.onSelect(
@@ -405,14 +419,7 @@ export default function PdfPage(props: Props) {
             ? rectAnchor(wrapper.current, rect)
             : undefined,
         );
-      } else if (!g.moved && g.annotation)
-        props.onEdit(
-          g.annotation,
-          wrapper.current && g.annotation.rects[0]
-            ? rectAnchor(wrapper.current, g.annotation.rects[0])
-            : undefined,
-        );
-      else if (
+      } else if (
         g.kind === 'scroll' &&
         ['single', 'two'].includes(layout) &&
         Math.abs(e.clientX - g.startClient.x) > 70 &&
@@ -422,14 +429,14 @@ export default function PdfPage(props: Props) {
         props.onPage(e.clientX < g.startClient.x ? 1 : -1);
     }
     gesture.current = undefined;
-    setSelection(undefined);
+    selectionLayer.current?.clear();
     setInk([]);
   }
   function cancel(e: React.PointerEvent) {
     pointers.current.delete(e.pointerId);
     if (gesture.current && gesture.current.id !== e.pointerId) return;
     gesture.current = undefined;
-    setSelection(undefined);
+    selectionLayer.current?.clear();
     setInk([]);
   }
   return (
@@ -467,12 +474,10 @@ export default function PdfPage(props: Props) {
             Text selection unavailable: {error}
           </div>
         )}
-        <HighlightLayer
-          annotations={annotations}
-          selection={
-            selection?.rects ||
-            (props.draft?.page === number ? props.draft.rects : [])
-          }
+        <HighlightLayer annotations={annotations} />
+        <SelectionLayer
+          ref={selectionLayer}
+          draft={props.draft?.page === number ? props.draft.rects : undefined}
         />
         <svg
           viewBox="0 0 1 1"

@@ -59,3 +59,5 @@ Prefer dense reading UI with minimal redundant borders and padding, particularly
 - Highlight fills must retain glyph contrast in light, dark and sepia views and in sidebar thumbnails.
 
 - Safari 26.0.1 selection and citation detection must work without ReadableStream async iteration; use explicit stream reads.
+
+- Mouse-down on a word immediately shows selection; clicking or a short drag can select one word. A stationary click on a saved annotation opens it. Live drag painting must not re-render all page controls per pointer event.

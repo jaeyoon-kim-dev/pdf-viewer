@@ -85,3 +85,5 @@ Highlight/Safari interaction follow-up: typecheck, lint, all 31 tests and produc
 ## Safari stream-iteration regression — 2026-09-10
 
 All 32 unit tests, typecheck, lint and production build passed. The regression test removes ReadableStream.prototype[Symbol.asyncIterator], reproduces PDF.js getTextContent() TypeError, and verifies the replacement extracts words, resolves a selection and generates citation hotspots from the three-page fixture. This directly covers the API missing in the reported Mac Safari 26.0.1 failure; actual Safari pointer/preview interaction verification remains outstanding.
+
+Selection performance follow-up: all 33 unit tests, typecheck, lint and build passed. The frame-queue regression covers 100 updates reduced to one latest-value paint, cancellation on release and subsequent reuse. Existing Safari extraction testing verifies single-word hit testing/selection. Manual Mac Safari verification is still needed for perceived smoothness, immediate mouse-down feedback, short/single-word selection, reverse drag, saved-annotation clicks and release before a scheduled frame. No browser timing measurements have been collected.

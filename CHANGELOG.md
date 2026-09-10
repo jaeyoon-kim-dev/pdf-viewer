@@ -87,3 +87,8 @@ Initial local application:
 
 - Replaced PDF.js stream async iteration with explicit reader.read() consumption for text extraction. The legacy build alone did not cover this missing Safari API.
 - Regression test disables ReadableStream async iteration, reproduces the upstream TypeError, then verifies text selection hit testing and citation hotspots from a real PDF through the replacement.
+
+## Immediate and frame-paced text selection — 2026-09-10
+
+- Mouse-down on text immediately paints a single word; clicks and short drags can create single-word annotations. Stationary clicks on saved annotations still open them.
+- Live selection updates only its own overlay, skips unchanged word ranges, and combines pointer updates into one paint per display frame. Release uses the final pointer position and cancels pending paints.

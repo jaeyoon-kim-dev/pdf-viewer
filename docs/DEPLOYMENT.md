@@ -105,3 +105,5 @@ Reading positions are included in SQLite backups. Startup applies migration 0002
 After updating browser compatibility code, reload open reader tabs to load the new client bundle and legacy worker.
 
 The Safari 26.0.1 extraction fix is a client update, with no migration or PDF changes. Reload the reader after deployment to replace the failing in-memory text extraction code.
+
+The selection rendering update is client-only; reload open reader tabs after deployment. No database migration is required.
