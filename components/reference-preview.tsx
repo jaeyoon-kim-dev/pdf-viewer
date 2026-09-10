@@ -7,15 +7,20 @@ import {
   Bookmark,
   ChevronLeft,
   ChevronRight,
+  Quote,
+  Copy,
+  Search,
 } from 'lucide-react';
 import { PopoverTitle, PopoverDescription } from '@/components/ui/popover';
 import ReaderPopover from './reader-popover';
 import type { ReaderAnchor } from '@/lib/popover-anchor';
+import { bibtex, scholarSearch } from '@/lib/citation-format';
 import { Switch } from '@/components/ui/switch';
 import type { Reference } from '@/lib/references';
 import { safeUrl, type Article, type Reading } from '@/lib/model';
 import { renderCanvas } from '@/lib/pdf';
 import { useLibrary } from '@/lib/store';
+const articleCache = new Map<string, Article>();
 export default function ReferencePreview({
   references,
   doc,
@@ -40,6 +45,12 @@ export default function ReferencePreview({
   const [fullPage, setFullPage] = useState(false);
   const [busy, setBusy] = useState(false);
   const [image, setImage] = useState('');
+  const [expanded, setExpanded] = useState(false);
+  const [section, setSection] = useState<'cite' | 'reference' | null>(null);
+  const [format, setFormat] = useState<'original' | 'bibtex'>('original');
+  const [copyStatus, setCopyStatus] = useState('');
+  const citation =
+    format === 'bibtex' && article ? bibtex(article) : reference.text;
   const saved = data.readings.find(
     (r) =>
       r.paperId === paperId &&
@@ -50,6 +61,9 @@ export default function ReferencePreview({
     let cancelled = false;
     let task: RenderTask | undefined;
     setImage('');
+    setExpanded(false);
+    setSection(null);
+    setCopyStatus('');
     setFullPage(false);
     setError('');
     setArticle(undefined);
@@ -62,7 +76,12 @@ export default function ReferencePreview({
         year: '',
         match: 'unresolved',
       };
-      setArticle(saved?.article || fallback);
+      const cached = articleCache.get(reference.text);
+      setArticle(cached || saved?.article || fallback);
+      if (cached) {
+        setLoading(false);
+        return () => controller.abort();
+      }
       setLoading(true);
       void fetch(`/api/citation?q=${encodeURIComponent(reference.text)}`, {
         signal: controller.signal,
@@ -72,7 +91,14 @@ export default function ReferencePreview({
           return r.json();
         })
         .then((a) => {
-          if (!cancelled) setArticle(a as Article);
+          if (!cancelled) {
+            setArticle(a as Article);
+            if ((a as Article).match !== 'unresolved') {
+              articleCache.set(reference.text, a as Article);
+              if (articleCache.size > 100)
+                articleCache.delete(articleCache.keys().next().value!);
+            }
+          }
         })
         .catch(() => {})
         .finally(() => {
@@ -132,21 +158,31 @@ export default function ReferencePreview({
       onClose={onClose}
       className="reference-preview-popover"
     >
-      <div className="eyebrow">
+      <div className="scholar-card-header">
         {reference.kind === 'citation'
-          ? 'REFERENCE PREVIEW'
-          : 'FIGURE & TABLE PREVIEW'}
-      </div>
-      <PopoverTitle>
-        {reference.kind === 'citation'
-          ? article?.title || reference.label
+          ? `[${reference.label}]`
           : reference.label}
+      </div>
+      <PopoverTitle className="scholar-card-title">
+        {reference.kind === 'citation' && safeUrl(article?.url) ? (
+          <a href={safeUrl(article?.url)} target="_blank" rel="noreferrer">
+            {article?.title || reference.label}
+          </a>
+        ) : reference.kind === 'citation' ? (
+          article?.title || reference.label
+        ) : (
+          reference.label
+        )}
       </PopoverTitle>
-      <PopoverDescription>
+      <PopoverDescription className="scholar-card-meta">
         {reference.kind === 'citation'
-          ? [article?.authors, article?.year].filter(Boolean).join(' · ') ||
-            'Bibliographic information'
-          : `Linked page ${reference.page}. Your reading position stays on page ${sourcePage}.`}
+          ? [
+              article?.authors,
+              [article?.venue, article?.year].filter(Boolean).join(', '),
+            ]
+              .filter(Boolean)
+              .join(' — ') || 'Original bibliography entry'
+          : `Page ${reference.page}`}
       </PopoverDescription>
       {references.length > 1 && (
         <div className="button-row">
@@ -180,72 +216,147 @@ export default function ReferencePreview({
       )}
       {reference.kind === 'citation' ? (
         <>
-          <div className="citation-body">
+          <div className="scholar-card-abstract">
             {article?.abstract ? (
-              <p>{article.abstract}</p>
+              <>
+                <p className={expanded ? '' : 'abstract-collapsed'}>
+                  {article.abstract}
+                </p>
+                <button
+                  className="text-button"
+                  aria-expanded={expanded}
+                  onClick={() => setExpanded(!expanded)}
+                >
+                  {expanded ? 'Show less' : 'Show more'}
+                </button>
+              </>
             ) : (
               !loading && (
                 <p className="muted">
-                  No abstract is available from the metadata provider.
+                  Abstract unavailable. The original reference is available
+                  below.
                 </p>
               )
             )}
-            {article?.match === 'candidate' && (
-              <p className="match-note">
-                Possible match from Crossref. Check the title against the
-                original reference below.
-              </p>
-            )}
-            {article?.match === 'unresolved' && !loading && (
-              <p className="match-note">
-                Could not identify this article reliably. You can still save the
-                original reference.
-              </p>
-            )}
-            <details>
-              <summary>Original reference</summary>
-              <p>{reference.text}</p>
-            </details>
           </div>
-          <div className="button-row">
-            {safeUrl(article?.url) && (
-              <a
-                className="secondary-button"
-                href={safeUrl(article?.url)}
-                target="_blank"
-                rel="noreferrer"
-              >
-                Article page
-                <ArrowUpRight size={16} />
-              </a>
-            )}
+          {article?.match === 'candidate' && (
+            <p className="scholar-match-note">
+              Possible title match · verify against the original reference.
+            </p>
+          )}
+          <div className="scholar-card-actions">
+            <label className="scholar-read-later" htmlFor="read-later-switch">
+              <Bookmark size={15} />
+              Read later
+              <Switch
+                id="read-later-switch"
+                checked={!!saved}
+                disabled={busy || !article}
+                onCheckedChange={toggle}
+              />
+            </label>
+            <button
+              aria-expanded={section === 'cite'}
+              onClick={() => setSection(section === 'cite' ? null : 'cite')}
+            >
+              <Quote size={15} />
+              Cite
+            </button>
+            <a
+              href={scholarSearch(article, reference.text)}
+              target="_blank"
+              rel="noreferrer"
+            >
+              <Search size={15} />
+              Search Scholar
+            </a>
+          </div>
+          <div className="scholar-card-access">
             {safeUrl(article?.pdf) && (
               <a
-                className="secondary-button"
+                className="scholar-pdf-link"
                 href={safeUrl(article?.pdf)}
                 target="_blank"
                 rel="noreferrer"
               >
-                PDF link
-                <ArrowUpRight size={16} />
+                [PDF] {new URL(safeUrl(article?.pdf)!).hostname}
+                <ArrowUpRight size={14} />
               </a>
             )}
+            {safeUrl(article?.url) && (
+              <a href={safeUrl(article?.url)} target="_blank" rel="noreferrer">
+                Article page
+                <ArrowUpRight size={14} />
+              </a>
+            )}
+            <button
+              aria-expanded={section === 'reference'}
+              onClick={() =>
+                setSection(section === 'reference' ? null : 'reference')
+              }
+            >
+              See in References
+            </button>
           </div>
-          <label className="read-later-toggle" htmlFor="read-later-switch">
-            <Bookmark size={20} />
-            <span>
-              <strong>Read later</strong>
-              <small>Keep this article and a link to where you found it.</small>
-            </span>
-            <Switch
-              id="read-later-switch"
-              checked={!!saved}
-              disabled={busy}
-              onCheckedChange={toggle}
-            />
-          </label>
-          <p className="muted citation-attribution">
-            Article metadata: Crossref. Availability varies by publisher.
+          {section === 'reference' && (
+            <section
+              className="scholar-card-detail"
+              aria-label="Original bibliography entry"
+            >
+              <strong>
+                [{reference.label}] · Bibliography, page {reference.page}
+              </strong>
+              <p>{reference.text}</p>
+            </section>
+          )}
+          {section === 'cite' && (
+            <section className="scholar-card-detail" aria-label="Copy citation">
+              <label>
+                Citation format{' '}
+                <select
+                  value={format}
+                  onChange={(e) => {
+                    setFormat(e.target.value as 'original' | 'bibtex');
+                    setCopyStatus('');
+                  }}
+                >
+                  <option value="original">Original reference</option>
+                  <option value="bibtex">BibTeX</option>
+                </select>
+              </label>
+              <textarea
+                aria-label="Citation text"
+                readOnly
+                rows={5}
+                value={citation}
+                onFocus={(e) => e.currentTarget.select()}
+              />
+              <button
+                className="text-button"
+                onClick={async () => {
+                  try {
+                    await navigator.clipboard.writeText(citation);
+                    setCopyStatus('Copied');
+                  } catch {
+                    setCopyStatus(
+                      'Select the citation text above and copy it.',
+                    );
+                  }
+                }}
+              >
+                <Copy size={14} />
+                Copy citation
+              </button>
+              <output>{copyStatus}</output>
+              {format === 'bibtex' && (
+                <small>
+                  Generated from available metadata; check before citing.
+                </small>
+              )}
+            </section>
+          )}
+          <p className="scholar-card-attribution">
+            Metadata: Crossref · Search Scholar opens a new tab.
           </p>
         </>
       ) : (

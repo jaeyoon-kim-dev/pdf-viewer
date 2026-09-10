@@ -39,6 +39,7 @@ export function validateRecord(
       text(value.article.raw, 10000) &&
       text(value.article.authors, 3000) &&
       text(value.article.year, 20) &&
+      (value.article.venue === undefined || text(value.article.venue, 2000)) &&
       (value.article.doi === undefined || text(value.article.doi, 500)) &&
       (value.article.abstract === undefined ||
         text(value.article.abstract, 15000)) &&

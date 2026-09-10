@@ -31,3 +31,10 @@ Initial local application:
 - One-click highlights/underlines; expandable notes, phrases and questions.
 - Place sticky memos anywhere on a page and reopen them from their pins.
 - Visible notebook deletion and session Cmd/Ctrl+Z / Cmd/Ctrl+Shift+Z undo/redo, including offline edits and synced deletions.
+
+## Scholar-style citation cards — 2026-09-10
+
+- Rebuilt preview presentation around the Scholar reference-card screenshot: slim reference header, linked title, publication line, expandable abstract, compact actions and access links.
+- Added original/BibTeX citation copying and inline bibliography context.
+- Retained Read later and added explicit Scholar search links without simulating unavailable Scholar metadata.
+- Added optional publication venue and a bounded client metadata cache.

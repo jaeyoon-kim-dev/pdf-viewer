@@ -3,6 +3,7 @@ import { safeUrl, type Article } from '@/lib/model';
 type CrossrefWork = {
   title?: string[];
   DOI?: string;
+  'container-title'?: string[];
   URL?: string;
   author?: { given?: string; family?: string }[];
   published?: { 'date-parts'?: number[][] };
@@ -53,6 +54,7 @@ export async function GET(request: Request) {
     const article: Article = {
       title: title.slice(0, 2000),
       raw,
+      venue: work['container-title']?.[0]?.slice(0, 2000),
       doi: work.DOI,
       authors: (work.author || [])
         .map((a: { given?: string; family?: string }) =>

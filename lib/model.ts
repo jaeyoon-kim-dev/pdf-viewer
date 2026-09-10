@@ -34,6 +34,7 @@ export type Article = {
   title: string;
   authors: string;
   year: string;
+  venue?: string;
   doi?: string;
   abstract?: string;
   url?: string;
