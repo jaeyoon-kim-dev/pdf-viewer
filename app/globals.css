@@ -1413,3 +1413,8 @@ textarea::placeholder {
 .thumbnail-sheet { width: 140px; min-height: 160px; background: #fff; box-shadow: 0 1px 4px #0003; }
 .thumbnail-sheet canvas { display: block; width: 140px; height: auto; }
 @media (max-width: 900px) { .document-sidebar { position: absolute; left: 0; top: 0; bottom: 0; z-index: 7; box-shadow: 4px 0 12px #0002; } }
+
+.thumbnail-sheet { position: relative; min-height: 0; overflow: hidden; }
+.thumbnail-annotations { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+.thumbnail-count { font-size: 10px; color: var(--reader-muted); }
+.selection-footer .text-button { display: inline-flex; align-items: center; gap: 4px; }

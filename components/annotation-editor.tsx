@@ -7,6 +7,7 @@ import {
   PenLine,
   Trash2,
   Link2,
+  Copy,
 } from 'lucide-react';
 import { PopoverTitle, PopoverDescription } from '@/components/ui/popover';
 import ReaderPopover from './reader-popover';
@@ -27,6 +28,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import TypePicker from './type-picker';
 import { type Annotation, sourceHref } from '@/lib/model';
+import { copyText } from '@/lib/clipboard';
 import { useLibrary } from '@/lib/store';
 export default function AnnotationEditor({
   annotation,
@@ -43,6 +45,15 @@ export default function AnnotationEditor({
   const [expanded, setExpanded] = useState(saved || !annotation.quote);
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
+  const [copied, setCopied] = useState(false);
+  async function copyQuote() {
+    try {
+      await copyText(draft.quote);
+      setCopied(true);
+    } catch (e) {
+      setError(String(e));
+    }
+  }
   const [confirmDelete, setConfirmDelete] = useState(false);
   async function submit(deleted = false, value = draft) {
     setBusy(true);
@@ -135,6 +146,14 @@ export default function AnnotationEditor({
           />
         )}
         <div className="selection-footer">
+          <button
+            className="text-button"
+            title="Copy selected text (⌘/Ctrl+C)"
+            onClick={copyQuote}
+          >
+            <Copy size={14} />
+            {copied ? 'Copied' : 'Copy'}
+          </button>
           <button className="text-button" onClick={() => setExpanded(true)}>
             More options
           </button>
@@ -167,7 +186,13 @@ export default function AnnotationEditor({
         Page {draft.page} · Your note and collections stay linked to this spot.
       </PopoverDescription>
       {draft.quote && (
-        <blockquote className="selected-quote">{draft.quote}</blockquote>
+        <>
+          <blockquote className="selected-quote">{draft.quote}</blockquote>
+          <button className="text-button" onClick={copyQuote}>
+            <Copy size={14} />
+            {copied ? 'Copied' : 'Copy selected text'}
+          </button>
+        </>
       )}
       <Tabs
         value={draft.kind}

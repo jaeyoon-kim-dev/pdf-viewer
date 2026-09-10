@@ -69,3 +69,5 @@ Citation cards follow the Scholar reference-card structure: reference label, lin
 Previews reserve loading space and do not reset expanded content when Read later or sync updates occur. Citation detection excludes standalone margin page numbers and page/section navigation; generic internal PDF links are no longer converted into citation previews.
 
 The top toolbar includes a Continuous/Page toggle and a button for the hideable left Contents/Pages sidebar. Contents uses the PDF’s embedded outline; Pages shows clickable thumbnails. Fit page fills the reading height (including with mixed-size pages); wide pages can scroll horizontally. Fit width remains width-constrained.
+
+Drag-select PDF text and press Cmd/Ctrl+C to copy it, or use Copy in the selection tooltip. Input fields retain normal copying. The Pages sidebar overlays saved highlights, underlines, ink and positioned sticky memos, with a per-page annotation count; changes and undo/redo update the thumbnails live.

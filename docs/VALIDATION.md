@@ -13,7 +13,7 @@ Run the checks documented in README. Integration fixtures never populate the rea
 
 - `npm run typecheck`: passed.
 - `npm run lint`: passed.
-- `npm test`: 26 tests passed, including a real three-page PDF fixture and IndexedDB outbox scenarios.
+- `npm test`: 28 tests passed, including a real three-page PDF fixture and IndexedDB outbox scenarios.
 - `npm run build`: passed with React 19.2.8, Vinext 1.0.0-beta.9, Vite 8.0.16, and PDF.js 6.3.289.
 - `CROSSREF_LIVE=1 npm run test:integration`: passed, including a live DOI lookup through Crossref and forwarded HTTPS-origin handling.
 - `docker compose up -d --build --wait`: passed; container healthy and bound to the private Tailscale interface at `100.111.111.100:3080`.
@@ -64,3 +64,5 @@ Citation refinement checks cover BibTeX escaping, publication metadata, Scholar 
 Added regression cases for bracketed footer folios, numbered native page/section links, overly distant reference targets, and genuine citations near the bottom of a text paragraph. Manually check the reported PDF for page-number hotspots, preview-loading shifts, and Read later/Show more stability. Browser verification remains outstanding.
 
 Final manual acceptance additions: verify palette-left/style-right tooltip layout and Save with Question/Phrase; toggle Continuous/Page after choosing horizontal/two-page views; open/hide Contents/Pages, navigate an outline entry and thumbnail; confirm Fit page fills reader height with both portrait and landscape pages and allows horizontal scrolling. Height-fit regression tests use floating-point tolerance. No browser interaction testing has been performed.
+
+Clipboard tests cover exact text, modern clipboard success, private HTTP fallback, denied permissions, and explicit failure reporting. Manually test Cmd/Ctrl+C and the Copy button on the private HTTP URL and Safari/iPad, and verify native note-field copying still works. Check Pages thumbnails after highlight, underline, handwriting, sticky memo, delete and undo. Browser verification remains outstanding.

@@ -50,3 +50,8 @@ Initial local application:
 - Selection tooltip now has a color palette, right-hand style selector, Question/Phrase toggles and Save.
 - Added Continuous/Page switching and a hideable left Contents/Pages sidebar with lazy thumbnails.
 - Fit page fills the available reading height using each page’s aspect ratio; wide pages scroll horizontally.
+
+## Copy and annotated thumbnails — 2026-09-10
+
+- Added Cmd/Ctrl+C and Copy buttons for custom PDF selections, including a private-HTTP clipboard fallback.
+- Pages thumbnails now display saved highlights, underlines, ink and sticky-memo markers with live annotation counts.

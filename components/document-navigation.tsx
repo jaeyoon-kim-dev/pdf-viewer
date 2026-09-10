@@ -1,24 +1,28 @@
 'use client';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import type { PDFDocumentProxy, RenderTask } from 'pdfjs-dist';
 import { X } from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import type { Annotation } from '@/lib/model';
 import { renderCanvas } from '@/lib/pdf';
 type Outline = NonNullable<Awaited<ReturnType<PDFDocumentProxy['getOutline']>>>;
 function Thumbnail({
   doc,
   page,
   current,
+  annotations,
   onSelect,
 }: {
   doc: PDFDocumentProxy;
   page: number;
   current: boolean;
+  annotations: Annotation[];
   onSelect: () => void;
 }) {
   const button = useRef<HTMLButtonElement>(null);
   const canvas = useRef<HTMLCanvasElement>(null);
   const [active, setActive] = useState(false);
+  const [aspect, setAspect] = useState(1.414);
   const [error, setError] = useState(false);
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -40,6 +44,8 @@ function Thumbnail({
       .getPage(page)
       .then(async (pdfPage) => {
         if (cancelled) return;
+        const viewport = pdfPage.getViewport({ scale: 1 });
+        setAspect(viewport.height / viewport.width);
         task = await renderCanvas(pdfPage, target, 140);
         if (cancelled) {
           task.cancel();
@@ -62,15 +68,80 @@ function Thumbnail({
     <button
       ref={button}
       className="page-thumbnail"
-      aria-label={`Go to page ${page}`}
+      aria-label={`Go to page ${page}, ${annotations.length} annotations`}
       aria-current={current ? 'page' : undefined}
       onClick={onSelect}
     >
-      <div className="thumbnail-sheet">
+      <div className="thumbnail-sheet" style={{ height: 140 * aspect }}>
         <canvas ref={canvas} aria-hidden="true" />
+        <svg
+          className="thumbnail-annotations"
+          viewBox="0 0 1 1"
+          preserveAspectRatio="none"
+          aria-hidden="true"
+        >
+          {annotations.map((a) => (
+            <g key={a.id}>
+              {a.kind === 'note' && !a.quote && a.rects[0] ? (
+                <rect
+                  x={a.rects[0].x}
+                  y={a.rects[0].y}
+                  width={0.06}
+                  height={0.045}
+                  rx={0.007}
+                  fill={a.color}
+                  stroke="#665522"
+                  strokeWidth={0.003}
+                />
+              ) : (
+                a.rects.map((r, i) =>
+                  a.kind === 'underline' ? (
+                    <line
+                      key={i}
+                      x1={r.x}
+                      y1={r.y + r.h}
+                      x2={r.x + r.w}
+                      y2={r.y + r.h}
+                      stroke={a.color}
+                      strokeWidth={0.006}
+                    />
+                  ) : (
+                    <rect
+                      key={i}
+                      x={r.x}
+                      y={r.y}
+                      width={r.w}
+                      height={r.h}
+                      fill={a.color}
+                      fillOpacity={0.38}
+                    />
+                  ),
+                )
+              )}
+              {a.points.length > 0 && (
+                <polyline
+                  points={a.points.map((p) => `${p.x},${p.y}`).join(' ')}
+                  fill="none"
+                  stroke={a.color}
+                  strokeWidth={0.004}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              )}
+            </g>
+          ))}
+        </svg>
         {error && <span>Preview unavailable</span>}
       </div>
-      <span>{page}</span>
+      <span>
+        {page}
+        {annotations.length > 0 && (
+          <small className="thumbnail-count">
+            {' '}
+            · {annotations.length} notes
+          </small>
+        )}
+      </span>
     </button>
   );
 }
@@ -79,13 +150,24 @@ export default function DocumentNavigation({
   page,
   onNavigate,
   onClose,
+  annotations,
 }: {
   doc: PDFDocumentProxy;
   page: number;
   onNavigate: (page: number) => void;
   onClose: () => void;
+  annotations: Annotation[];
 }) {
   const [tab, setTab] = useState('contents');
+  const byPage = useMemo(() => {
+    const pages = new Map<number, Annotation[]>();
+    for (const annotation of annotations)
+      pages.set(annotation.page, [
+        ...(pages.get(annotation.page) || []),
+        annotation,
+      ]);
+    return pages;
+  }, [annotations]);
   const [outline, setOutline] = useState<Outline>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -189,6 +271,7 @@ export default function DocumentNavigation({
                 doc={doc}
                 page={i + 1}
                 current={page === i + 1}
+                annotations={byPage.get(i + 1) || []}
                 onSelect={() => onNavigate(i + 1)}
               />
             ))}

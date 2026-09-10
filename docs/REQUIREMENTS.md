@@ -45,3 +45,5 @@ Reference preview presentation should closely follow the Scholar card structure,
 Page numbers must not become citation hotspots. Internal links need citation/figure semantics and a credible matching destination. Keep expanded preview content stable across library sync and Read later changes; indicate asynchronous metadata loading explicitly.
 
 Selection tooltip layout: color palette on the left, Highlight/Underline/Note selector on the right, Question/Phrase toggles below, explicit Save. Provide a top-level Continuous/Page toggle and a hideable left sidebar with Contents and Pages. Fit page must maximize page height inside the reader instead of shrinking to available width.
+
+Custom PDF selections must support Cmd/Ctrl+C and a visible Copy action without native text selection or the iPad selection callout. Pages-sidebar previews must include saved annotations and reflect edit/delete/undo updates.

@@ -6,6 +6,7 @@ import {
   type FitMode,
 } from '@/lib/reader-view';
 import { elementAnchor, type ReaderAnchor } from '@/lib/popover-anchor';
+import { copyText } from '@/lib/clipboard';
 import { createId } from '@/lib/id';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { PDFDocumentProxy } from 'pdfjs-dist';
@@ -280,6 +281,23 @@ export default function Reader({ paperId }: { paperId: string }) {
       if (
         (e.metaKey || e.ctrlKey) &&
         !e.altKey &&
+        !e.shiftKey &&
+        e.key.toLowerCase() === 'c' &&
+        editing?.quote &&
+        !(e.target as HTMLElement).closest(
+          'input,textarea,[contenteditable]:not([contenteditable="false"])',
+        ) &&
+        !window.getSelection()?.toString()
+      ) {
+        e.preventDefault();
+        void copyText(editing.quote)
+          .then(() => setMessage('Selected text copied.'))
+          .catch((error) => setError(String(error)));
+        return;
+      }
+      if (
+        (e.metaKey || e.ctrlKey) &&
+        !e.altKey &&
         e.key.toLowerCase() === 'z' &&
         !(e.target as HTMLElement).closest(
           'input,textarea,[contenteditable="true"]',
@@ -320,8 +338,27 @@ export default function Reader({ paperId }: { paperId: string }) {
         goto(currentPage.current - (layout === 'two' ? 2 : 1));
       }
     };
+    const copy = (e: ClipboardEvent) => {
+      if (
+        !editing?.quote ||
+        !e.clipboardData ||
+        (e.target instanceof Element &&
+          e.target.closest(
+            'input,textarea,[contenteditable]:not([contenteditable="false"])',
+          )) ||
+        window.getSelection()?.toString()
+      )
+        return;
+      e.preventDefault();
+      e.clipboardData.setData('text/plain', editing.quote);
+      setMessage('Selected text copied.');
+    };
     window.addEventListener('keydown', key);
-    return () => window.removeEventListener('keydown', key);
+    document.addEventListener('copy', copy);
+    return () => {
+      window.removeEventListener('keydown', key);
+      document.removeEventListener('copy', copy);
+    };
   }, [
     goto,
     layout,
@@ -776,6 +813,7 @@ export default function Reader({ paperId }: { paperId: string }) {
       <div className="reader-body">
         {navigationOpen && doc && (
           <DocumentNavigation
+            annotations={annotations}
             doc={doc}
             page={page}
             onNavigate={goto}
