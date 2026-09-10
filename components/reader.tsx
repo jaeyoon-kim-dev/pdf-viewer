@@ -55,6 +55,7 @@ import { loadPdf, pageText } from '@/lib/pdf';
 import { extractReferences, type Reference } from '@/lib/references';
 import type { Annotation } from '@/lib/model';
 import PdfPage from './pdf-page';
+import useReadingPosition from './use-reading-position';
 import DocumentNavigation from './document-navigation';
 import AnnotationEditor from './annotation-editor';
 import ReferencePreview from './reference-preview';
@@ -108,17 +109,28 @@ export default function Reader({ paperId }: { paperId: string }) {
   const scroller = useRef<HTMLDivElement>(null);
   const currentPage = useRef(1);
   const initialPage = useRef(1);
+  const initialMark = useRef<string | undefined>(undefined);
+  const restoredPosition = useRef(false);
   const initialLinkApplied = useRef(false);
+  const { initial: initialPosition, schedule: schedulePosition } =
+    useReadingPosition(paperId, scroller, currentPage, restoredPosition);
   const annotations = data.annotations
     .filter((a) => a.paperId === paperId)
     .sort((a, b) => a.page - b.page || a.createdAt.localeCompare(b.createdAt));
   useEffect(() => {
     const params = new URLSearchParams(location.search);
-    const p = Number(params.get('page'));
-    initialPage.current = Number.isInteger(p) && p > 0 ? p : 1;
-    setPage(initialPage.current);
-    currentPage.current = initialPage.current;
-    setSelected(params.get('annotation') || undefined);
+    let source: { page?: number; annotation?: string } = {};
+    try {
+      source = JSON.parse(
+        sessionStorage.getItem(`paperthread-source-${paperId}`) || '{}',
+      );
+      sessionStorage.removeItem(`paperthread-source-${paperId}`);
+    } catch {}
+    const p = source.page || Number(params.get('page'));
+    initialPage.current = Number.isInteger(p) && p > 0 ? p : 0;
+    initialMark.current =
+      source.annotation || params.get('annotation') || undefined;
+    history.replaceState(history.state, '', location.pathname);
     try {
       const prefs = JSON.parse(
         localStorage.getItem('paperthread-view') || '{}',
@@ -131,7 +143,7 @@ export default function Reader({ paperId }: { paperId: string }) {
       if (['width', 'page', 'custom'].includes(prefs.fitMode))
         setFitMode(prefs.fitMode);
     } catch {}
-  }, []);
+  }, [paperId]);
   useEffect(() => {
     document.documentElement.classList.toggle('dark', theme === 'dark');
     return () => document.documentElement.classList.remove('dark');
@@ -227,9 +239,7 @@ export default function Reader({ paperId }: { paperId: string }) {
       setPage(n);
       currentPage.current = n;
       setSelected(mark);
-      const params = new URLSearchParams({ page: String(n) });
-      if (mark) params.set('annotation', mark);
-      history.replaceState(history.state, '', `${location.pathname}?${params}`);
+
       if (layout === 'continuous' || layout === 'horizontal')
         requestAnimationFrame(() =>
           document.getElementById(`page-${n}`)?.scrollIntoView({
@@ -239,22 +249,45 @@ export default function Reader({ paperId }: { paperId: string }) {
           }),
         );
       else scroller.current?.scrollTo({ top: 0, left: 0 });
+      schedulePosition();
     },
-    [doc, layout],
+    [doc, layout, schedulePosition],
   );
   useEffect(() => {
-    if (!doc || initialLinkApplied.current) return;
-    initialLinkApplied.current = true;
-    const timer = setTimeout(
-      () =>
-        goto(
-          initialPage.current,
-          new URLSearchParams(location.search).get('annotation') || undefined,
-        ),
-      200,
-    );
+    if (!doc || initialPosition === undefined || initialLinkApplied.current)
+      return;
+    const timer = setTimeout(() => {
+      initialLinkApplied.current = true;
+      const position = initialPage.current
+        ? { page: initialPage.current, x: 0, y: 0 }
+        : initialPosition || { page: 1, x: 0, y: 0 };
+      goto(position.page, initialMark.current);
+      requestAnimationFrame(() =>
+        requestAnimationFrame(() => {
+          const target = document
+            .getElementById(`page-${Math.min(doc.numPages, position.page)}`)
+            ?.querySelector('.pdf-page');
+          const container = scroller.current;
+          if (target && container && !initialMark.current) {
+            const rect = target.getBoundingClientRect(),
+              viewport = container.getBoundingClientRect();
+            container.scrollBy({
+              left: position.x
+                ? rect.left + position.x * rect.width - viewport.left
+                : 0,
+              top: position.y
+                ? rect.top + position.y * rect.height - viewport.top
+                : 0,
+              behavior: 'instant',
+            });
+          }
+          restoredPosition.current = true;
+          schedulePosition();
+        }),
+      );
+    }, 100);
     return () => clearTimeout(timer);
-  }, [doc, goto]);
+  }, [doc, goto, initialPosition, schedulePosition]);
   const fits = fittedWidth(width, height, aspect, layout === 'two', pageChrome);
   const pageWidth =
     fitMode === 'custom' ? (baseWidth * zoom) / 100 : fits[fitMode];
@@ -630,7 +663,6 @@ export default function Reader({ paperId }: { paperId: string }) {
             onClick={async () => {
               try {
                 const link = new URL(location.pathname, location.origin);
-                link.searchParams.set('page', String(currentPage.current));
                 await navigator.clipboard.writeText(link.href);
                 setMessage('Paper link copied.');
               } catch {
@@ -910,6 +942,7 @@ export default function Reader({ paperId }: { paperId: string }) {
           ref={scroller}
           className={`reader-scroll layout-${layout}`}
           onScroll={() => {
+            schedulePosition();
             if (
               !doc ||
               !['continuous', 'horizontal'].includes(layout) ||
@@ -991,7 +1024,10 @@ export default function Reader({ paperId }: { paperId: string }) {
           </div>
         </div>
         {sidebar && (
-          <aside className="reader-sidebar" aria-label="Annotations and references">
+          <aside
+            className="reader-sidebar"
+            aria-label="Annotations and references"
+          >
             <div className="sidebar-heading">
               <strong>Annotations & references</strong>
               <button

@@ -9,8 +9,8 @@ export type PageText = {
   height: number;
 };
 export async function pdfLibrary() {
-  const pdf = await import('pdfjs-dist');
-  pdf.GlobalWorkerOptions.workerSrc = '/pdfjs/pdf.worker.min.mjs';
+  const pdf = await import('pdfjs-dist/legacy/build/pdf.mjs');
+  pdf.GlobalWorkerOptions.workerSrc = '/pdfjs/pdf.worker.legacy.min.mjs';
   return pdf;
 }
 export async function loadPdf(data: Uint8Array) {

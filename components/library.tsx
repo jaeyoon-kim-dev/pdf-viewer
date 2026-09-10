@@ -26,6 +26,7 @@ import {
   EmptyMedia,
 } from '@/components/ui/empty';
 import { useLibrary, exportLibrary } from '@/lib/store';
+import { rememberSource } from '@/lib/reading-position';
 import { sourceHref, safeUrl, type Paper, type Annotation } from '@/lib/model';
 import { loadPdf } from '@/lib/pdf';
 import SyncStatus from './sync-status';
@@ -332,7 +333,11 @@ export default function Library() {
                     )}
                     <div className="source-list">
                       {entries.map((source) => (
-                        <a key={source.id} href={sourceHref(source, false)}>
+                        <a
+                          key={source.id}
+                          href={sourceHref(source, false)}
+                          onClick={() => rememberSource(source, false)}
+                        >
                           <BookOpen size={14} />
                           {paperMap.get(source.paperId)?.title} · p.{' '}
                           {source.page}
@@ -394,7 +399,11 @@ export default function Library() {
                     </span>
                   ))}
                 </div>
-                <a className="source-link" href={sourceHref(a)}>
+                <a
+                  className="source-link"
+                  href={sourceHref(a)}
+                  onClick={() => rememberSource(a)}
+                >
                   <BookOpen size={15} />
                   <span>
                     {paperMap.get(a.paperId)?.title} · p. {a.page}

@@ -20,3 +20,10 @@ export const records = sqliteTable(
   },
   (t) => [index('idx_records_kind_paper').on(t.kind, t.paperId)],
 );
+export const readingPositions = sqliteTable('reading_positions', {
+  paperId: text('paper_id')
+    .primaryKey()
+    .references(() => papers.id),
+  payload: text('payload').notNull(),
+  updatedAt: integer('updated_at').notNull(),
+});

@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   Highlighter,
   Underline,
@@ -24,6 +24,10 @@ import {
 } from '@/components/ui/alert-dialog';
 import TypePicker from './type-picker';
 import { type Annotation, sourceHref } from '@/lib/model';
+import {
+  annotationPreferences,
+  ANNOTATION_PREFERENCES_KEY,
+} from '@/lib/annotation-preferences';
 import { copyText } from '@/lib/clipboard';
 import { useLibrary } from '@/lib/store';
 export default function AnnotationEditor({
@@ -37,7 +41,35 @@ export default function AnnotationEditor({
 }) {
   const { data, save } = useLibrary();
   const saved = data.annotations.some((a) => a.id === annotation.id);
-  const [draft, setDraft] = useState(annotation);
+  const [draft, setDraft] = useState(() => {
+    if (!saved && annotation.quote) {
+      try {
+        return {
+          ...annotation,
+          ...annotationPreferences(
+            localStorage.getItem(ANNOTATION_PREFERENCES_KEY),
+          ),
+        };
+      } catch {}
+    }
+    return annotation;
+  });
+  const [rememberPreferences] = useState(!saved && !!annotation.quote);
+  useEffect(() => {
+    if (!rememberPreferences) return;
+    try {
+      localStorage.setItem(
+        ANNOTATION_PREFERENCES_KEY,
+        JSON.stringify({
+          color: draft.color,
+          kind: draft.kind,
+          types: draft.types.filter(
+            (type) => type === 'question' || type === 'phrase',
+          ),
+        }),
+      );
+    } catch {}
+  }, [draft.color, draft.kind, draft.types, rememberPreferences]);
   const [expanded, setExpanded] = useState(saved || !annotation.quote);
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);

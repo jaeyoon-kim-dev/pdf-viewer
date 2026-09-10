@@ -14,13 +14,13 @@ For iPad access, put the app behind HTTPS on your local network or private VPN. 
 
 ## Features
 
-- Upload searchable PDFs up to 40 MB; permanent `/papers/<uuid>` URLs, page links, and annotation links.
+- Upload searchable PDFs up to 40 MB; permanent `/papers/<uuid>` URLs and database-backed last reading positions. In-app collection links jump to their source.
 - Paper titles and tags, library search, tag filtering.
 - Continuous vertical, continuous horizontal, single-page, and two-page layouts; zoom, text search, light/dark/sepia themes.
 - Drag text to highlight, underline, or create a memo. Pen toggle enables handwriting. Every annotation supports a note and any number of collection types.
 - Built-in Phrases and Questions, plus user-created types such as Ideas and Limitations. Questions can be marked resolved.
 - In-place previews for recognized citations and figures/tables. Citation information is looked up through Crossref, with possible matches explicitly labeled.
-- Read-later switch inside reference previews. The reading list groups matched works and retains source backlinks.
+- Save/unsave toggle for Read later inside reference previews. The reading list groups matched works and retains source backlinks.
 - Installable PWA; explicit offline paper download; local annotation outbox and conflict resolution on reconnection.
 - JSON export of library records, including stable IDs, source anchors, tags, types, and ink coordinates.
 
@@ -75,3 +75,7 @@ Drag-select PDF text and press Cmd/Ctrl+C to copy it, or use Copy in the selecti
 Hold Cmd (Mac) or Ctrl and scroll over the PDF to zoom around the pointer. Scroll up zooms in; scroll down zooms out. Ordinary scrolling stays unchanged. Wheel zoom switches to custom zoom within 25–400%.
 
 Reader panels and popovers use compact spacing: annotations are separated rows, controls remain visible, and touch devices keep larger action targets.
+
+Annotation tooltips remember color, style and Question/Phrase choices in browser local storage. Quoted source text retains a left quote bar separate from your notes. Citation cards use grouped navigation, a fading abstract and rounded access buttons.
+
+Safari 18+ is the compatibility target using PDF.js’s legacy build; real Safari/iPad verification remains outstanding. Offline PWA features on the private server need HTTPS.

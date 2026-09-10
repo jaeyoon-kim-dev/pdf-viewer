@@ -68,6 +68,30 @@ try {
   });
   assert.equal(upload.status, 201, await upload.clone().text());
   const paper = await upload.json();
+  const positionPath = `/api/papers/${paper.id}/position`;
+  assert.equal(await (await fetch(base + positionPath)).json(), null);
+  const position = { page: 2, x: 0.2, y: 0.4, updatedAt: 200 };
+  assert.equal((await request(positionPath, 'PUT', position)).status, 200);
+  assert.deepEqual(await (await fetch(base + positionPath)).json(), position);
+  assert.equal(
+    (
+      await request(positionPath, 'PUT', {
+        ...position,
+        page: 1,
+        updatedAt: 100,
+      })
+    ).status,
+    200,
+  );
+  assert.deepEqual(await (await fetch(base + positionPath)).json(), position);
+  assert.equal(
+    (await request(positionPath, 'PUT', { ...position, page: 4 })).status,
+    400,
+  );
+  assert.equal(
+    (await request(positionPath, 'PUT', { ...position, y: 2 })).status,
+    400,
+  );
   const file = await fetch(base + `/api/papers/${paper.id}/file`);
   assert.equal(file.status, 200);
   assert.deepEqual(Buffer.from(await file.arrayBuffer()), pdf);
@@ -233,7 +257,7 @@ try {
     '/manifest.webmanifest',
     '/sw.js',
     '/icon-192.png',
-    '/pdfjs/pdf.worker.min.mjs',
+    '/pdfjs/pdf.worker.legacy.min.mjs',
   ])
     assert.equal((await fetch(base + path)).status, 200, path);
   execFileSync(process.execPath, ['scripts/backup.mjs', join(root, 'backup')], {

@@ -4,7 +4,8 @@ import { useEffect, useRef, useState } from 'react';
 import type { PDFDocumentProxy, RenderTask } from 'pdfjs-dist';
 import {
   ArrowUpRight,
-  Bookmark,
+  Star,
+  Expand,
   ChevronLeft,
   ChevronRight,
   Quote,
@@ -15,7 +16,6 @@ import { PopoverTitle, PopoverDescription } from '@/components/ui/popover';
 import ReaderPopover from './reader-popover';
 import type { ReaderAnchor } from '@/lib/popover-anchor';
 import { bibtex, scholarSearch } from '@/lib/citation-format';
-import { Switch } from '@/components/ui/switch';
 import type { Reference } from '@/lib/references';
 import { safeUrl, type Article, type Reading } from '@/lib/model';
 import { renderCanvas } from '@/lib/pdf';
@@ -167,9 +167,55 @@ export default function ReferencePreview({
       className="reference-preview-popover"
     >
       <div className="scholar-card-header">
-        {reference.kind === 'citation'
-          ? `[${reference.label}]`
-          : reference.label}
+        <div
+          className="scholar-reference-group"
+          aria-label="References in this citation"
+        >
+          {reference.kind === 'citation' ? (
+            <>
+              [{' '}
+              {references.map((item, i) => (
+                <span key={i}>
+                  {i > 0 && ', '}
+                  <button
+                    aria-label={`Reference ${item.label}`}
+                    aria-current={i === index ? 'true' : undefined}
+                    onClick={() => setIndex(i)}
+                  >
+                    {item.label.replace(/^\[|\]$/g, '')}
+                  </button>
+                </span>
+              ))}{' '}
+              ]
+            </>
+          ) : (
+            reference.label
+          )}
+        </div>
+        {references.length > 1 && (
+          <div className="scholar-reference-navigation">
+            <span>
+              {index + 1} / {references.length}
+            </span>
+
+            <button
+              className="icon-button"
+              disabled={index === 0}
+              aria-label="Previous reference"
+              onClick={() => setIndex((i) => i - 1)}
+            >
+              <ChevronLeft />
+            </button>
+            <button
+              className="icon-button"
+              disabled={index === references.length - 1}
+              aria-label="Next reference"
+              onClick={() => setIndex((i) => i + 1)}
+            >
+              <ChevronRight />
+            </button>
+          </div>
+        )}
       </div>
       <PopoverTitle className="scholar-card-title">
         {reference.kind === 'citation' && safeUrl(article?.url) ? (
@@ -199,30 +245,7 @@ export default function ReferencePreview({
               : 'Original bibliography entry')
           : `Page ${reference.page}`}
       </PopoverDescription>
-      {references.length > 1 && (
-        <div className="button-row">
-          <button
-            className="icon-button"
-            disabled={index === 0}
-            aria-label="Previous reference"
-            onClick={() => setIndex((i) => i - 1)}
-          >
-            <ChevronLeft />
-          </button>
-          <span>
-            {index + 1} / {references.length}
-          </span>
-          <button
-            className="icon-button"
-            disabled={index === references.length - 1}
-            aria-label="Next reference"
-            onClick={() => setIndex((i) => i + 1)}
-          >
-            <ChevronRight />
-          </button>
-        </div>
-      )}
-      <output className="preview-loading-status" aria-live="polite">
+      <output className="sr-only" aria-live="polite">
         {loading
           ? reference.kind === 'citation'
             ? 'Looking up article information…'
@@ -249,7 +272,7 @@ export default function ReferencePreview({
                   aria-expanded={expanded}
                   onClick={() => setExpanded(!expanded)}
                 >
-                  {expanded ? 'Show less' : 'Show more'}
+                  {expanded ? 'Show less' : 'Show more'} <Expand size={12} />
                 </button>
               </>
             ) : (
@@ -267,16 +290,19 @@ export default function ReferencePreview({
             </p>
           )}
           <div className="scholar-card-actions">
-            <label className="scholar-read-later" htmlFor="read-later-switch">
-              <Bookmark size={15} />
-              Read later
-              <Switch
-                id="read-later-switch"
-                checked={!!saved}
-                disabled={busy || !article}
-                onCheckedChange={toggle}
-              />
-            </label>
+            <button
+              className="scholar-read-later"
+              aria-label={
+                saved ? 'Remove from Read later' : 'Save to Read later'
+              }
+              aria-pressed={!!saved}
+              title={saved ? 'Remove from Read later' : 'Save to Read later'}
+              disabled={busy || !article}
+              onClick={() => void toggle(!saved)}
+            >
+              <Star size={17} fill={saved ? 'currentColor' : 'none'} />
+              {saved ? 'Saved' : 'Save'}
+            </button>
             <button
               aria-expanded={section === 'cite'}
               onClick={() => setSection(section === 'cite' ? null : 'cite')}
@@ -307,7 +333,7 @@ export default function ReferencePreview({
             )}
             {safeUrl(article?.url) && (
               <a href={safeUrl(article?.url)} target="_blank" rel="noreferrer">
-                Article page
+                Full View
                 <ArrowUpRight size={14} />
               </a>
             )}

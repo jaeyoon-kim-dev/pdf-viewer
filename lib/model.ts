@@ -72,9 +72,8 @@ export const EMPTY_LIBRARY: LibraryData = {
 };
 export const sourceHref = (
   item: { paperId: string; page: number; id?: string },
-  annotation = true,
-) =>
-  `/papers/${item.paperId}?page=${item.page}${annotation && item.id ? `&annotation=${item.id}` : ''}`;
+  _annotation = true,
+) => `/papers/${item.paperId}`;
 export function safeUrl(value?: string) {
   try {
     const u = new URL(value || '');

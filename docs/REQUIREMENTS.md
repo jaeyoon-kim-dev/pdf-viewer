@@ -4,7 +4,7 @@
 
 - Personal web PDF library. Upload once and read from the site.
 - Installable PWA, desktop and iPad support.
-- Stable, unique `/papers/<uuid>` path per PDF, with page and annotation deep links.
+- Stable, unique `/papers/<uuid>` path per PDF, without URL query/hash state; database-backed resume and in-app source navigation.
 - Citation popovers with cited-article information, and figure previews without navigating away.
 - Highlight, underline, memo, and handwriting annotations; all support notes.
 - Extensible entity/collection types, initially Phrases and Questions. User can create Ideas, Limitations, or other types. An annotation can belong to multiple types.
@@ -51,3 +51,7 @@ Custom PDF selections must support Cmd/Ctrl+C and a visible Copy action without 
 Support Cmd/Ctrl+scroll over the PDF for zoom, preserving the point under the pointer and leaving unmodified scrolling available.
 
 Prefer dense reading UI with minimal redundant borders and padding, particularly in Annotations/References. Preserve readable text, visible actions, and touch target sizes.
+
+- Citation preview follows the supplied Scholar screenshot: grouped citation buttons and arrows in the header, blue article title, single-line metadata, fading abstract, Save/Cite/Search actions and pill access links. Unavailable citation/version counts are omitted.
+- Preserve tooltip color/style/Question/Phrase choices locally and distinguish source quotes from personal notes with a quote bar.
+- Target Safari 18+ with the PDF.js compatibility build; verify real iPad behavior separately.

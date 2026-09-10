@@ -72,3 +72,10 @@ Select-control follow-up: inspect all toolbar, library and citation-format dropd
 Wheel-zoom unit checks cover direction, zero delta, pixel/line/page normalization, bounded wheel increments and zoom limits. Manually check Cmd/Ctrl+wheel over the PDF, trackpad scrolling, pointer anchoring near page edges, transitions from fit modes, and normal scrolling without modifiers. Browser interaction validation remains outstanding.
 
 Compact-layout changes passed typecheck/lint and production Docker build. Manual visual checks remain needed for annotation/reference row density, popup spacing, dropdown text, narrow screen wrapping, and touch target usability. No new unit tests were added for this presentation-only change.
+
+## Preview/resume/Safari follow-up — 2026-09-10
+
+- Typecheck, lint and all 31 unit tests passed. Production build and isolated HTTP integration passed, including position round-trip, stale-write protection and invalid page/offset rejection.
+- With Map/WeakMap.getOrInsertComputed removed in a Node process, the PDF.js legacy build restored the missing methods and loaded/extracted text from the real three-page fixture. Both application and worker use legacy builds; a distinct worker URL avoids reusing the previous modern worker from cache. This is a compatibility regression check, not Safari browser testing.
+- The supplied Safari screenshot identifies missing getOrInsertComputed. Mozilla lists Safari 18+ as mostly supported under its legacy build: https://github.com/mozilla/pdf.js/wiki/Frequently-Asked-Questions#which-browsersenvironments-are-supported . Actual Safari/iPad verification remains required.
+- Database backed up before migration; Docker rebuilt and healthy. Manually verify resume at page offsets, bare URLs, source jumps, tooltip preferences, quote separation and the screenshot-based preview layout.

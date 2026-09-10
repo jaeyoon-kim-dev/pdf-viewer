@@ -70,3 +70,10 @@ Initial local application:
 - Replaced annotation cards with dense separated rows and compact edit/delete actions.
 - Reduced sidebar header/search/tab spacing, empty-state margins and popup padding.
 - Removed repeated quote/footer borders and retained larger touch action targets.
+
+## Preview layout, reading continuity and Safari compatibility — 2026-09-10
+
+- Matched the supplied preview structure with grouped header navigation, blue title, truncated metadata, fading abstract, Save toggle and rounded access links.
+- Store last reading position in SQLite while keeping paper URLs free of query/hash state; preserve in-app source jumps via session storage.
+- Remember tooltip choices in local storage and restore the annotation sidebar quote bar.
+- Use matching PDF.js legacy library/worker builds for Safari compatibility.

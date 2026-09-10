@@ -29,7 +29,7 @@ A collection type is a reusable entity classification with an ID, name, and colo
 
 Whole-paper tags are independent of annotation types. Paper metadata edits currently require a connection. Annotation, collection-type creation, and read-later changes may be queued offline.
 
-`/papers/<uuid>?page=4&annotation=<uuid>` is the canonical annotation source link. Read-later entries retain the source paper, citing page, original bibliography text, and retrieved article information. The reading list groups DOI matches (otherwise normalized titles) while retaining each source entry. The source anchor currently identifies the citing page rather than the exact citation word rectangle.
+`/papers/<uuid>` is the canonical source URL, without query or hash state. In-app source clicks put the page/annotation target in sessionStorage before navigation; copied URLs reopen the paper at its last reading position rather than carrying an exact annotation target. Read-later entries retain the source paper, citing page, original bibliography text, and retrieved article information. The reading list groups DOI matches (otherwise normalized titles) while retaining each source entry. The source anchor currently identifies the citing page rather than the exact citation word rectangle.
 
 ## Synchronization and durability
 
@@ -92,3 +92,5 @@ The reader exposes its custom selection quote to keyboard and copy events, exclu
 The reading scroller owns a non-passive wheel listener. Only Cmd/Ctrl-modified vertical wheel events are intercepted. Pixel/line/page deltas are normalized and bounded before exponential zoom; the existing custom zoom clamp applies. A normalized anchor on the page under the pointer is captured before scaling and restored through a layout-effect scroll adjustment. No wheel listener is installed on sidebars or preview popovers.
 
 Reader density rules are scoped to sidebars and popovers: annotation rows replace nested bordered cards, redundant sidebar titles are visually suppressed in favor of tab labels, and edit/delete share a compact action row. Annotation quote blocks and editor footers no longer add nested borders. Citation loading reserves a smaller content area; long titles/abstracts and explicit expansion can still resize the card. Touch-specific rules retain larger action targets.
+
+Reading positions use a dedicated reading_positions SQLite table and GET/PUT /api/papers/:id/position. Normalized page offsets are debounced after scrolling and flushed on page hide; localStorage provides offline recovery and reconnect retries. Client timestamps keep older writes from overwriting newer positions (devices should have synchronized clocks). Tooltip style preferences are localStorage-only; note content is never a preference. PDF.js uses matching legacy main/worker builds for Safari compatibility.

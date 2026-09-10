@@ -45,9 +45,9 @@ void test('rejects malformed coordinates, source pages, revisions, and colors', 
   assert.equal(validateRecord('annotations', 'other', annotation), false);
   assert.equal(validateRecord('annotations', 'a', null), false);
 });
-void test('source URLs identify both paper and annotation, with a citation-only variant', () => {
-  assert.equal(sourceHref(annotation), '/papers/paper?page=1&annotation=a');
-  assert.equal(sourceHref(annotation, false), '/papers/paper?page=1');
+void test('source URLs keep the canonical paper path without parameters', () => {
+  assert.equal(sourceHref(annotation), '/papers/paper');
+  assert.equal(sourceHref(annotation, false), '/papers/paper');
 });
 void test('untrusted metadata URLs cannot execute code', () => {
   assert.equal(safeUrl('javascript:alert(1)'), undefined);
