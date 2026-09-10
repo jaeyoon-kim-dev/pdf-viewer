@@ -1,0 +1,5 @@
+'use client';
+import { BookOpen, Upload, Quote, CircleHelp, Bookmark, ArrowUpRight } from 'lucide-react';
+export default function Library() {
+  return <main className="library-shell"><header className="site-header"><a className="brand" href="/"><BookOpen size={23} />Paperthread</a><span className="muted">Personal library</span></header><div className="library-content"><div className="eyebrow">YOUR READING SPACE</div><div className="title-row"><div><h1>Library</h1><p className="muted">Papers, and the ideas you take from them.</p></div><label className="primary-button"><Upload size={17}/> Upload PDF<input type="file" accept="application/pdf" hidden /></label></div><nav className="library-nav"><span className="active">All papers</span><span><Quote size={16}/> Phrases</span><span><CircleHelp size={16}/> Questions</span><span><Bookmark size={16}/> Read later</span></nav><section className="empty-library"><BookOpen size={38}/><h2>Your next paper starts here.</h2><p>Upload a PDF to read, annotate, and follow references without losing your place.</p><span className="muted">Every paper gets a permanent link <ArrowUpRight size={14}/></span></section></div></main>;
+}
