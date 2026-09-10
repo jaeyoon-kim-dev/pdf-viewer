@@ -100,3 +100,7 @@ Highlight fills and temporary text selection use a dedicated SVG blend layer (mu
 Text extraction consumes page.streamTextContent() with getReader()/read() and releases the lock in finally. This bypasses PDF.js 6 getTextContent() stream async iteration, absent in Safari 26.0.1. Pure XFA pages retain the upstream XFA text path. See the upstream report: https://github.com/mozilla/pdf.js/issues/20973 .
 
 Live selection is owned by SelectionLayer, rather than PdfPage state. The first mouse-down paints synchronously through the discrete event update; subsequent changed word ranges use a latest-value animation-frame queue. Identical ranges do not schedule work. Release/cancel/unmount cancel queued paints, and the final annotation uses pointer-up coordinates. This avoids reconciling the page annotation controls and accessible text on every pointer move. Touch retains the scroll-versus-selection threshold; mouse selection starts immediately.
+
+Drag hit testing caches word groups by line and chooses vertical line proximity before horizontal word proximity; aligned columns use horizontal distance to break ties. Whole-word anchors remain unchanged. Question markers derive from annotation.types and the first saved rectangle; no new storage fields are needed.
+
+Citation hotspot pointer events join the page gesture handler. Pointer-up opens the preview only for a stationary gesture; dragging selects text. The click handler remains for keyboard/assistive activation, preventing a trailing pointer click from replacing the selection with a preview.

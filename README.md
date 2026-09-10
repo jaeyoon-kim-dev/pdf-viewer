@@ -81,3 +81,5 @@ Annotation tooltips remember color, style and Question/Phrase choices in browser
 Safari 18+ is the compatibility target using PDF.js’s legacy build and explicit text stream reads (including Safari 26.0.1); real Safari/iPad verification remains outstanding. Offline PWA features on the private server need HTTPS.
 
 Highlights blend with page text to preserve contrast, including thumbnail previews; dark pages use screen blending.
+
+Question-tagged annotations show a Q marker on the PDF and page thumbnails; click the page marker to open the question. Selection remains word-based.

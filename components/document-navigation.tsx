@@ -133,6 +133,22 @@ function Thumbnail({
             </g>
           ))}
         </svg>
+        {annotations
+          .filter((a) => a.types.includes('question') && a.rects.length > 0)
+          .map((a) => (
+            <span
+              key={a.id}
+              className="thumbnail-question-marker"
+              aria-hidden="true"
+              style={{
+                left: `${a.rects[0].x * 100}%`,
+                top: `${a.rects[0].y * 100}%`,
+                background: a.color,
+              }}
+            >
+              Q
+            </span>
+          ))}
         {error && <span>Preview unavailable</span>}
       </div>
       <span>

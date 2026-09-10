@@ -114,7 +114,68 @@ async function extractPage(
   }
   return { words, lines, width: viewport.width, height: viewport.height };
 }
+type WordLine = {
+  indices: number[];
+  left: number;
+  right: number;
+  top: number;
+  bottom: number;
+};
+const wordLines = new WeakMap<Word[], WordLine[]>();
+function indexedLines(words: Word[]) {
+  const cached = wordLines.get(words);
+  if (cached) return cached;
+  const groups = new Map<number, WordLine>();
+  words.forEach((word, index) => {
+    let line = groups.get(word.line);
+    if (!line) {
+      line = {
+        indices: [],
+        left: word.x,
+        right: word.x + word.w,
+        top: word.y,
+        bottom: word.y + word.h,
+      };
+      groups.set(word.line, line);
+    }
+    line.indices.push(index);
+    line.left = Math.min(line.left, word.x);
+    line.right = Math.max(line.right, word.x + word.w);
+    line.top = Math.min(line.top, word.y);
+    line.bottom = Math.max(line.bottom, word.y + word.h);
+  });
+  const lines = [...groups.values()];
+  wordLines.set(words, lines);
+  return lines;
+}
 export function hitWord(words: Word[], x: number, y: number, nearest = false) {
+  if (nearest) {
+    // Horizontal distance must not pull the endpoint onto a different line.
+    // For aligned columns, horizontal distance breaks the vertical tie.
+    let closest: WordLine | undefined;
+    let vertical = Infinity,
+      horizontal = Infinity;
+    for (const line of indexedLines(words)) {
+      const dy = Math.max(line.top - y, 0, y - line.bottom);
+      const dx = Math.max(line.left - x, 0, x - line.right);
+      if (dy < vertical || (dy === vertical && dx < horizontal)) {
+        closest = line;
+        vertical = dy;
+        horizontal = dx;
+      }
+    }
+    let best = -1,
+      distance = Infinity;
+    for (const index of closest?.indices || []) {
+      const word = words[index];
+      const dx = Math.max(word.x - x, 0, x - word.x - word.w);
+      if (dx < distance) {
+        best = index;
+        distance = dx;
+      }
+    }
+    return best;
+  }
   let best = -1;
   let distance = Infinity;
   words.forEach((w, i) => {
@@ -126,7 +187,7 @@ export function hitWord(words: Word[], x: number, y: number, nearest = false) {
       best = i;
     }
   });
-  return nearest || distance < 0.000015 ? best : -1;
+  return distance < 0.000015 ? best : -1;
 }
 export function selectWords(words: Word[], start: number, end: number) {
   const selected = words.slice(Math.min(start, end), Math.max(start, end) + 1);

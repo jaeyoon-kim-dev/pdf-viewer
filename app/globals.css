@@ -1526,3 +1526,8 @@ textarea::placeholder {
 .theme-dark .pdf-page .highlight-layer { mix-blend-mode: screen; }
 .thumbnail-highlights { z-index: auto; }
 .pdf-canvas { -webkit-user-drag: none; }
+
+.question-marker { position: absolute; z-index: 5; transform: translate(-65%, -70%); width: 17px; height: 17px; padding: 0; display: grid; place-items: center; border: 1px solid #57470d; border-radius: 3px; color: #211b08; font: 700 11px/1 system-ui; box-shadow: 0 1px 2px #0002; }
+.question-pin-label { font-size: 14px; font-weight: 700; }
+.placing-memo .question-marker { pointer-events: none; }
+.thumbnail-question-marker { position: absolute; transform: translate(-40%, -60%); padding: 1px 2px; border-radius: 2px; color: #211b08; font: 700 8px/1 system-ui; pointer-events: none; }

@@ -92,3 +92,9 @@ Initial local application:
 
 - Mouse-down on text immediately paints a single word; clicks and short drags can create single-word annotations. Stationary clicks on saved annotations still open them.
 - Live selection updates only its own overlay, skips unchanged word ranges, and combines pointer updates into one paint per display frame. Release uses the final pointer position and cancels pending paints.
+
+## Question markers and word selection accuracy — 2026-09-10
+
+- Retain whole-word selection. Drag endpoints choose the line under the pointer before the nearest word, fixing skipped short line endings and incorrect selection of words on adjacent lines.
+- Question-tagged text annotations show a clickable Q badge at the highlight; question memos and page thumbnails also show Q.
+- Citation hotspots now distinguish clicks from drags: click opens a preview, drag selects text, and keyboard activation remains available.

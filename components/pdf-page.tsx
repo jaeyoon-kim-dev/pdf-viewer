@@ -57,6 +57,8 @@ type Gesture = {
   points: Point[];
   moved: boolean;
   annotation?: Annotation;
+  reference?: Hotspot;
+  referenceAnchor?: ReaderAnchor;
 };
 export default function PdfPage(props: Props) {
   const { doc, number, annotations, references, pen, layout } = props;
@@ -278,7 +280,12 @@ export default function PdfPage(props: Props) {
   const scroll = () =>
     wrapper.current?.closest('.reader-scroll') as HTMLElement | null;
   function down(e: React.PointerEvent<HTMLDivElement>) {
-    if (e.button !== 0 || (e.target as HTMLElement).closest('button')) return;
+    if (e.button !== 0) return;
+    const button = (e.target as Element).closest('button');
+    if (button && !button.classList.contains('reference-hotspot')) return;
+    const reference = button
+      ? spots[Number(button.dataset.referenceIndex)]
+      : undefined;
     if (gesture.current?.kind === 'ink' && e.pointerType === 'touch') return;
     pointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
     try {
@@ -318,6 +325,8 @@ export default function PdfPage(props: Props) {
       points: [p],
       moved: false,
       annotation,
+      reference,
+      referenceAnchor: button ? elementAnchor(button) : undefined,
     };
     selectionLayer.current?.clear();
     if (gesture.current.kind === 'select' && text)
@@ -394,7 +403,9 @@ export default function PdfPage(props: Props) {
           { page: number, kind: 'note', rects: [rect] },
           wrapper.current ? rectAnchor(wrapper.current, rect) : undefined,
         );
-      } else if (g.kind === 'ink' && g.points.length > 1)
+      } else if (!g.moved && g.reference && g.kind !== 'ink')
+        props.onPreview(g.reference.references, g.referenceAnchor);
+      else if (g.kind === 'ink' && g.points.length > 1)
         props.onSelect({
           page: number,
           kind: 'ink',
@@ -552,13 +563,39 @@ export default function PdfPage(props: Props) {
               }}
               onClick={(e) => props.onEdit(a, elementAnchor(e.currentTarget))}
             >
-              <StickyNote size={17} />
+              {a.types.includes('question') ? (
+                <span className="question-pin-label">Q</span>
+              ) : (
+                <StickyNote size={17} />
+              )}
+            </button>
+          ))}
+        {annotations
+          .filter(
+            (a) =>
+              a.types.includes('question') && a.quote && a.rects.length > 0,
+          )
+          .map((a) => (
+            <button
+              key={a.id}
+              className="question-marker"
+              aria-label={`Open question: ${a.note || a.quote}`}
+              title={a.note || 'Question'}
+              style={{
+                left: `${a.rects[0].x * 100}%`,
+                top: `${a.rects[0].y * 100}%`,
+                background: a.color,
+              }}
+              onClick={(e) => props.onEdit(a, elementAnchor(e.currentTarget))}
+            >
+              Q
             </button>
           ))}
         {spots.map((spot, i) => (
           <button
             key={i}
             className="reference-hotspot"
+            data-reference-index={i}
             aria-label={`Preview ${spot.references.map((r) => r.label).join(', ')}`}
             style={{
               left: `${spot.x * 100}%`,
@@ -566,9 +603,15 @@ export default function PdfPage(props: Props) {
               width: `${spot.w * 100}%`,
               height: `${spot.h * 100}%`,
             }}
-            onClick={(e) =>
-              props.onPreview(spot.references, elementAnchor(e.currentTarget))
-            }
+            onClick={(e) => {
+              // Pointer activation is handled on release, distinguishing a
+              // click from a drag. Keep keyboard/assistive clicks available.
+              if (e.detail === 0)
+                props.onPreview(
+                  spot.references,
+                  elementAnchor(e.currentTarget),
+                );
+            }}
           />
         ))}
         <div className="sr-only">

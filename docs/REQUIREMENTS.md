@@ -61,3 +61,7 @@ Prefer dense reading UI with minimal redundant borders and padding, particularly
 - Safari 26.0.1 selection and citation detection must work without ReadableStream async iteration; use explicit stream reads.
 
 - Mouse-down on a word immediately shows selection; clicking or a short drag can select one word. A stationary click on a saved annotation opens it. Live drag painting must not re-render all page controls per pointer event.
+
+- Keep whole-word selection, including in Safari. Crossing short line endings must not select an unrelated word on another line.
+- Question-tagged highlights display a clickable Q on the PDF, with matching thumbnail markers.
+- Citation text supports both click-to-preview and drag-to-select.
