@@ -60,8 +60,13 @@ Prefer dense reading UI with minimal redundant borders and padding, particularly
 
 - Safari 26.0.1 selection and citation detection must work without ReadableStream async iteration; use explicit stream reads.
 
-- Mouse-down on a word immediately shows selection; clicking or a short drag can select one word. A stationary click on a saved annotation opens it. Live drag painting must not re-render all page controls per pointer event.
+- Desktop text drags use native selection and snap to words on release; clicking can select one word. A stationary click on a saved annotation opens it. Live drag painting must not re-render all page controls per pointer event.
 
 - Keep whole-word selection, including in Safari. Crossing short line endings must not select an unrelated word on another line.
 - Question-tagged highlights display a clickable Q on the PDF, with matching thumbnail markers.
 - Citation text supports both click-to-preview and drag-to-select.
+
+
+- Use the example's PDF.js text-layer approach for alignment, with the full viewer's Safari selection handling.
+- Desktop native selection must persist across line boundaries, reverse drags and tooltip opening; iPad uses custom feedback without native Selection ranges.
+- Compact tooltip: palette and style icons, Question/Phrase options, Copy and More. Clicking a color saves directly; no separate Save action in this tooltip.

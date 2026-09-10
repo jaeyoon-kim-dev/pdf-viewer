@@ -1531,3 +1531,51 @@ textarea::placeholder {
 .question-pin-label { font-size: 14px; font-weight: 700; }
 .placing-memo .question-marker { pointer-events: none; }
 .thumbnail-question-marker { position: absolute; transform: translate(-40%, -60%); padding: 1px 2px; border-radius: 2px; color: #211b08; font: 700 8px/1 system-ui; pointer-events: none; }
+
+/* PDF.js TextLayer geometry, scoped so reader controls keep their own styles. */
+.pdf-text-layer {
+  position: absolute; inset: 0; overflow: clip; opacity: 1;
+  line-height: 1; letter-spacing: normal; word-spacing: normal; text-align: initial;
+  transform-origin: 0 0; -webkit-text-size-adjust: none; text-size-adjust: none;
+  forced-color-adjust: none; z-index: 2; -webkit-touch-callout: none;
+  --min-font-size: 1;
+  --text-scale-factor: calc(var(--total-scale-factor) * var(--min-font-size));
+  --min-font-size-inv: calc(1 / var(--min-font-size));
+}
+.pdf-text-layer :is(span, br) {
+  position: absolute; color: transparent; white-space: pre; cursor: text;
+  transform-origin: 0 0; -webkit-user-select: none; user-select: none;
+  -webkit-touch-callout: none;
+}
+.pdf-text-layer .textLayer > :not(.markedContent), .pdf-text-layer .markedContent span:not(.markedContent) {
+  --font-height: 0; font-size: calc(var(--text-scale-factor) * var(--font-height));
+  --scale-x: 1; --rotate: 0deg;
+  transform: rotate(var(--rotate)) scaleX(var(--scale-x)) scale(var(--min-font-size-inv));
+}
+.pdf-text-layer .markedContent { display: contents; }
+.pdf-text-layer.native-text-selection, .pdf-text-layer.native-text-selection :is(span, br) {
+  -webkit-user-select: text; user-select: text;
+}
+.pdf-text-layer ::selection { background: rgb(96 165 250 / .35); color: transparent; }
+
+.native-selecting .reference-hotspot, .native-selecting .question-marker, .native-selecting .sticky-memo-pin { pointer-events: none; }
+
+.selection-tooltip { display: grid; grid-template-columns: 1fr auto; width: min(284px, calc(100vw - 24px)); padding: 7px 9px; gap: 5px 8px; }
+.selection-tooltip .selection-palette-row { grid-column: 1 / -1; gap: 8px; justify-content: flex-start; padding-right: 18px; flex-wrap: nowrap; }
+.selection-tooltip .selection-palette { gap: 4px; }
+.selection-tooltip .selection-palette button { width: 19px; height: 19px; min-width: 19px; }
+.selection-tooltip .selection-style-buttons { background: none; min-height: 26px; padding: 0 0 0 6px; border-left: 1px solid var(--border); border-radius: 0; gap: 1px; }
+.selection-tooltip .selection-style-buttons [data-slot='tabs-trigger'] { width: 26px; min-height: 26px; padding: 4px; }
+.selection-tooltip .selection-collections { grid-column: 1; grid-row: 2; gap: 10px; }
+.selection-tooltip .selection-collections .type-option { gap: 4px; font-size: 11px; }
+.selection-tooltip .selection-footer { grid-column: 2; grid-row: 2; gap: 4px; }
+.selection-tooltip .selection-footer .text-button { width: 23px; height: 23px; padding: 4px; justify-content: center; }
+.selection-tooltip > textarea, .selection-tooltip > .error { grid-column: 1 / -1; font-size: 12px; }
+.selection-tooltip .popover-close { top: 7px; right: 5px; width: 20px; height: 20px; min-height: 20px; }
+
+
+.pdf-text-layer .textLayer { position: absolute; inset: 0; overflow: clip; line-height: 1; text-align: initial; transform-origin: 0 0; }
+.pdf-text-layer .textLayer > :not(.markedContent), .pdf-text-layer .markedContent span:not(.markedContent) { z-index: 1; }
+.pdf-text-layer .textLayer .endOfContent { display: block; position: absolute; inset: 100% 0 0; z-index: 0; cursor: default; -webkit-user-select: none; user-select: none; }
+.pdf-text-layer .textLayer.selecting .endOfContent { top: 0; }
+.pdf-text-layer br::selection { background: transparent; }

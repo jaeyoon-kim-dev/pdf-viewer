@@ -8,6 +8,8 @@ import {
   Trash2,
   Link2,
   Copy,
+  MoreHorizontal,
+  Check,
 } from 'lucide-react';
 import { PopoverTitle, PopoverDescription } from '@/components/ui/popover';
 import ReaderPopover from './reader-popover';
@@ -104,7 +106,8 @@ export default function AnnotationEditor({
       >
         <PopoverTitle className="sr-only">Annotate selected text</PopoverTitle>
         <PopoverDescription className="sr-only">
-          Choose a color, annotation style and optional collections, then save.
+          Choose an annotation style and optional collections, then click a
+          color to save.
         </PopoverDescription>
         <div className="selection-palette-row">
           <div
@@ -119,7 +122,13 @@ export default function AnnotationEditor({
                   aria-pressed={draft.color === color}
                   className={draft.color === color ? 'chosen' : ''}
                   style={{ background: color }}
-                  onClick={() => setDraft({ ...draft, color })}
+                  title={`Save ${['yellow', 'green', 'blue', 'pink', 'purple'][i]} ${draft.kind}`}
+                  disabled={busy}
+                  onClick={() => {
+                    const value = { ...draft, color };
+                    setDraft(value);
+                    void submit(false, value);
+                  }}
                 />
               ),
             )}
@@ -134,17 +143,22 @@ export default function AnnotationEditor({
               className="selection-style-buttons"
               aria-label="Annotation style"
             >
-              <TabsTrigger value="highlight">
-                <Highlighter size={15} />
-                Highlight
+              <TabsTrigger
+                value="highlight"
+                aria-label="Highlight"
+                title="Highlight"
+              >
+                <Highlighter size={16} />
               </TabsTrigger>
-              <TabsTrigger value="underline">
-                <Underline size={15} />
-                Underline
+              <TabsTrigger
+                value="underline"
+                aria-label="Underline"
+                title="Underline"
+              >
+                <Underline size={16} />
               </TabsTrigger>
-              <TabsTrigger value="note">
-                <StickyNote size={15} />
-                Note
+              <TabsTrigger value="note" aria-label="Note" title="Note">
+                <StickyNote size={16} />
               </TabsTrigger>
             </TabsList>
           </Tabs>
@@ -192,19 +206,20 @@ export default function AnnotationEditor({
             title="Copy selected text (⌘/Ctrl+C)"
             onClick={copyQuote}
           >
-            <Copy size={14} />
-            {copied ? 'Copied' : 'Copy'}
-          </button>
-          <button className="text-button" onClick={() => setExpanded(true)}>
-            More options
+            {copied ? <Check size={14} /> : <Copy size={14} />}
+            <span className="sr-only">{copied ? 'Copied' : 'Copy'}</span>
           </button>
           <button
-            className="primary-button"
-            disabled={busy}
-            onClick={() => submit()}
+            className="text-button"
+            title="More options"
+            aria-label="More options"
+            onClick={() => setExpanded(true)}
           >
-            {busy ? 'Saving…' : 'Save'}
+            <MoreHorizontal size={16} />
           </button>
+          {busy && (
+            <output className="sr-only">Saving…</output>
+          )}
         </div>
         {error && (
           <p role="alert" className="error">

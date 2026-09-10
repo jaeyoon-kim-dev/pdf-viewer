@@ -10,3 +10,6 @@ dist
 public/pdfjs
 *.tsbuildinfo
 .openai
+
+example
+image*.png

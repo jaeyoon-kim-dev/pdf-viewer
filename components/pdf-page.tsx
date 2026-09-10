@@ -5,6 +5,12 @@ import {
   type ReaderAnchor,
 } from '@/lib/popover-anchor';
 import HighlightLayer from './highlight-layer';
+import useTextLayer from './use-text-layer';
+import {
+  nativeMouseSelection,
+  selectedWordRange,
+  wordRange,
+} from '@/lib/text-layer';
 import SelectionLayer, { type SelectionLayerHandle } from './selection-layer';
 import { StickyNote } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
@@ -71,12 +77,45 @@ export default function PdfPage(props: Props) {
     : props.width;
   const [error, setError] = useState('');
   const [painted, setPainted] = useState(false);
+  const textContainer = useRef<HTMLDivElement>(null);
+  const measured = useTextLayer(
+    doc,
+    number,
+    width,
+    painted && active,
+    textContainer,
+  );
+  const selectionText = measured.geometry?.text;
+  const [nativeDesktop] = useState(
+    () =>
+      typeof navigator !== 'undefined' &&
+      nativeMouseSelection(
+        navigator.userAgent,
+        navigator.platform,
+        navigator.maxTouchPoints,
+      ),
+  );
+  const nativeGesture = useRef<
+    { id: number; x: number; y: number; annotation?: Annotation } | undefined
+  >(undefined);
   const [nativeSpots, setNativeSpots] = useState<Hotspot[]>([]);
   const selectionLayer = useRef<SelectionLayerHandle>(null);
   const [ink, setInk] = useState<Point[]>([]);
   const gesture = useRef<Gesture | undefined>(undefined);
   const pointers = useRef(new Map<number, { x: number; y: number }>());
   const pinch = useRef(0);
+  const outsideRelease = useRef<(event: PointerEvent) => void>(() => {});
+  useEffect(() => {
+    outsideRelease.current = (event) => {
+      if (nativeGesture.current) up(event);
+    };
+  });
+  useEffect(() => {
+    if (!nativeDesktop || !active) return;
+    const release = (event: PointerEvent) => outsideRelease.current(event);
+    window.addEventListener('pointerup', release);
+    return () => window.removeEventListener('pointerup', release);
+  }, [nativeDesktop, active]);
   const selectedId = props.selected;
   const hasSelected = annotations.some((a) => a.id === selectedId);
   useEffect(() => {
@@ -259,7 +298,7 @@ export default function PdfPage(props: Props) {
     () => [
       ...nativeSpots,
       ...(text
-        ? referenceHotspots(text, references).filter(
+        ? referenceHotspots(selectionText || text, references).filter(
             (s) =>
               !nativeSpots.some(
                 (n) => Math.abs(n.x - s.x) < 0.02 && Math.abs(n.y - s.y) < 0.01,
@@ -267,9 +306,11 @@ export default function PdfPage(props: Props) {
           )
         : []),
     ],
-    [nativeSpots, text, references],
+    [nativeSpots, text, references, selectionText],
   );
-  const point = (e: React.PointerEvent): Point => {
+  const point = (
+    e: Pick<PointerEvent, 'clientX' | 'clientY' | 'pressure'>,
+  ): Point => {
     const r = wrapper.current!.getBoundingClientRect();
     return {
       x: Math.max(0, Math.min(1, (e.clientX - r.left) / r.width)),
@@ -286,6 +327,30 @@ export default function PdfPage(props: Props) {
     const reference = button
       ? spots[Number(button.dataset.referenceIndex)]
       : undefined;
+    if (
+      nativeDesktop &&
+      e.pointerType === 'mouse' &&
+      !pen &&
+      !props.placingMemo &&
+      !button &&
+      measured.geometry
+    ) {
+      const p = point(e);
+      nativeGesture.current = {
+        id: e.pointerId,
+        x: e.clientX,
+        y: e.clientY,
+        annotation: annotations.find((a) =>
+          a.rects.some(
+            (r) =>
+              p.x >= r.x && p.x <= r.x + r.w && p.y >= r.y && p.y <= r.y + r.h,
+          ),
+        ),
+      };
+      wrapper.current?.classList.add('native-selecting');
+      window.getSelection()?.removeAllRanges();
+      return; // Let the browser perform the drag on the real PDF.js text.
+    }
     if (gesture.current?.kind === 'ink' && e.pointerType === 'touch') return;
     pointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
     try {
@@ -302,7 +367,7 @@ export default function PdfPage(props: Props) {
       return;
     }
     const p = point(e);
-    const word = text ? hitWord(text.words, p.x, p.y) : -1;
+    const word = selectionText ? hitWord(selectionText.words, p.x, p.y) : -1;
     const annotation = annotations.find((a) =>
       a.rects.some(
         (r) => p.x >= r.x && p.x <= r.x + r.w && p.y >= r.y && p.y <= r.y + r.h,
@@ -329,8 +394,8 @@ export default function PdfPage(props: Props) {
       referenceAnchor: button ? elementAnchor(button) : undefined,
     };
     selectionLayer.current?.clear();
-    if (gesture.current.kind === 'select' && text)
-      selectionLayer.current?.select(text.words, word, word, true);
+    if (gesture.current.kind === 'select' && selectionText)
+      selectionLayer.current?.select(selectionText.words, word, word, true);
     setInk([]);
     e.preventDefault();
   }
@@ -357,9 +422,9 @@ export default function PdfPage(props: Props) {
         (e.pointerType === 'mouse' || Math.abs(dx) >= Math.abs(dy) * 0.65)
           ? 'select'
           : 'scroll';
-    if (g.kind === 'select' && text) {
-      g.end = hitWord(text.words, p.x, p.y, true);
-      selectionLayer.current?.select(text.words, g.word, g.end);
+    if (g.kind === 'select' && selectionText) {
+      g.end = hitWord(selectionText.words, p.x, p.y, true);
+      selectionLayer.current?.select(selectionText.words, g.word, g.end);
     }
     if (g.kind === 'ink') {
       if (g.points.length < 9000) {
@@ -386,7 +451,59 @@ export default function PdfPage(props: Props) {
     g.lastClient = { x: e.clientX, y: e.clientY };
     e.preventDefault();
   }
-  function up(e: React.PointerEvent<HTMLDivElement>) {
+  function up(
+    e: Pick<PointerEvent, 'pointerId' | 'clientX' | 'clientY' | 'pressure'>,
+  ) {
+    const native = nativeGesture.current;
+    if (
+      native &&
+      native.id === e.pointerId &&
+      measured.geometry &&
+      wrapper.current
+    ) {
+      nativeGesture.current = undefined;
+      requestAnimationFrame(() =>
+        wrapper.current?.classList.remove('native-selecting'),
+      );
+      const selection = window.getSelection();
+      const range = selection?.rangeCount ? selection.getRangeAt(0) : undefined;
+      let indices =
+        range &&
+        !range.collapsed &&
+        (textContainer.current?.contains(selection?.anchorNode || null) ||
+          textContainer.current?.contains(selection?.focusNode || null))
+          ? selectedWordRange(range, measured.geometry.ranges)
+          : undefined;
+      if (
+        !indices &&
+        Math.hypot(e.clientX - native.x, e.clientY - native.y) < 5
+      ) {
+        if (native.annotation) {
+          props.onEdit(native.annotation, elementAnchor(wrapper.current));
+          return;
+        }
+        const p = point(e),
+          index = hitWord(measured.geometry.text.words, p.x, p.y);
+        if (index >= 0) indices = [index, index];
+      }
+      if (indices) {
+        const value = selectWords(measured.geometry.text.words, ...indices);
+        const snapped = wordRange(measured.geometry.ranges, ...indices);
+        if (snapped && selection)
+          selection.setBaseAndExtent(
+            snapped.startContainer,
+            snapped.startOffset,
+            snapped.endContainer,
+            snapped.endOffset,
+          );
+        props.onSelect(
+          { page: number, ...value },
+          rectAnchor(wrapper.current, value.rects.at(-1)!),
+        );
+      }
+      return;
+    }
+
     pointers.current.delete(e.pointerId);
     const g = gesture.current;
     if (g && g.id !== e.pointerId) return;
@@ -419,11 +536,11 @@ export default function PdfPage(props: Props) {
             ? rectAnchor(wrapper.current, g.annotation.rects[0])
             : undefined,
         );
-      else if (g.kind === 'select' && text) {
+      else if (g.kind === 'select' && selectionText) {
         const endpoint = point(e);
-        g.end = hitWord(text.words, endpoint.x, endpoint.y, true);
-        const selection = selectWords(text.words, g.word, g.end);
-        const rect = text.words[g.end] || selection.rects.at(-1);
+        g.end = hitWord(selectionText.words, endpoint.x, endpoint.y, true);
+        const selection = selectWords(selectionText.words, g.word, g.end);
+        const rect = selectionText.words[g.end] || selection.rects.at(-1);
         props.onSelect(
           { page: number, ...selection },
           rect && wrapper.current
@@ -444,6 +561,8 @@ export default function PdfPage(props: Props) {
     setInk([]);
   }
   function cancel(e: React.PointerEvent) {
+    nativeGesture.current = undefined;
+    wrapper.current?.classList.remove('native-selecting');
     pointers.current.delete(e.pointerId);
     if (gesture.current && gesture.current.id !== e.pointerId) return;
     gesture.current = undefined;
@@ -463,6 +582,7 @@ export default function PdfPage(props: Props) {
         onDragStart={(e) => e.preventDefault()}
         onContextMenu={(e) => e.preventDefault()}
         aria-label={`PDF page ${number}`}
+        data-text-ready={!!measured.geometry}
       >
         <canvas
           ref={canvas}
@@ -473,6 +593,16 @@ export default function PdfPage(props: Props) {
         />
         {(!painted || !active) && (
           <div className="page-placeholder">{error || `Page ${number}`}</div>
+        )}
+        <div
+          ref={textContainer}
+          className={`pdf-text-layer ${nativeDesktop && !pen && !props.placingMemo ? 'native-text-selection' : ''}`}
+          aria-hidden="true"
+        />
+        {active && measured.error && (
+          <div className="page-text-notice" role="alert">
+            Text selection unavailable: {measured.error}
+          </div>
         )}
         {active && text && text.words.length === 0 && (
           <div className="page-text-notice">
@@ -488,6 +618,7 @@ export default function PdfPage(props: Props) {
         <HighlightLayer annotations={annotations} />
         <SelectionLayer
           ref={selectionLayer}
+          nativeContainer={textContainer}
           draft={props.draft?.page === number ? props.draft.rects : undefined}
         />
         <svg

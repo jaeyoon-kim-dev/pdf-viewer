@@ -104,3 +104,14 @@ Live selection is owned by SelectionLayer, rather than PdfPage state. The first 
 Drag hit testing caches word groups by line and chooses vertical line proximity before horizontal word proximity; aligned columns use horizontal distance to break ties. Whole-word anchors remain unchanged. Question markers derive from annotation.types and the first saved rectangle; no new storage fields are needed.
 
 Citation hotspot pointer events join the page gesture handler. Pointer-up opens the preview only for a stationary gesture; dragging selects text. The click handler remains for keyboard/assistive activation, preventing a trailing pointer click from replacing the selection with a preview.
+
+
+## PDF.js text-layer selection — 2026-09-10
+
+The local example demonstrated DOM text selection instead of estimated canvas word widths. Visible pages now use the legacy PDF.js TextLayerBuilder, including its Safari end-of-content selection handling. After the bitmap and text layer render, Range bounds produce normalized word rectangles. The background bibliography/search index continues to use stream text extraction. Font-scale CSS is scoped to the reader and iOS automatic text enlargement is disabled.
+
+Desktop mouse drags use native browser selection; release snaps the range to complete words and retains native highlighting while the tooltip opens. The SVG selection layer stays mounted and is hidden while native selection is active. Citation buttons and memo/question markers stop intercepting hit tests during a native drag. A release outside the page still commits the originating page's selection.
+
+iPad/iPhone (including iPadOS's MacIntel desktop identity with touch points) keep user-select and callouts disabled and use the existing custom pointer/scroll/pen interaction with measured DOM bounds. This path does not create native Selection ranges. Completed annotation coordinates and stored IDs are unchanged.
+
+Palette clicks save an explicit draft snapshot with the chosen color, current kind, note and collection tags. The compact toolbar has no separate Save button; the full editor retains its save/delete controls.

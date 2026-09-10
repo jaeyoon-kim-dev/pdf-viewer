@@ -98,3 +98,12 @@ Initial local application:
 - Retain whole-word selection. Drag endpoints choose the line under the pointer before the nearest word, fixing skipped short line endings and incorrect selection of words on adjacent lines.
 - Question-tagged text annotations show a clickable Q badge at the highlight; question memos and page thumbnails also show Q.
 - Citation hotspots now distinguish clicks from drags: click opens a preview, drag selects text, and keyboard activation remains available.
+
+
+## Text-layer selection and minimal color-to-save tooltip — 2026-09-10
+
+- Use PDF.js TextLayerBuilder and measured DOM word bounds instead of estimated canvas boxes for visible-page selection. Include the viewer's Safari cross-line selection handling.
+- Desktop drag uses browser selection and snaps to words on release; iPad keeps custom feedback without activating native text selection.
+- Keep the selection overlay mounted and disable citation hit areas during a native drag to avoid disturbing selection.
+- Reduce the tooltip to a palette, style icons and compact collection/actions row. Clicking a color saves directly.
+- Add isolated WebKit/Chromium/iPad-emulation browser regressions for cross-line/reverse selection, visible feedback, zoom, color saving and question markers.

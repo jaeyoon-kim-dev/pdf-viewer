@@ -25,7 +25,7 @@ No cloud deployment was performed. Docker now binds to the private Tailscale int
 
 ## Validation still required
 
-No browser interaction testing or physical-iPad testing has been performed. In particular, validate Apple Pencil palm interaction, custom text selection, multi-touch zoom, scrolling, and Safari standalone/offline behavior on the target iPadOS version. A successful build or API test does not prove those interactions work on a device.
+Automated browser selection tests now run in Chromium and WebKit; no physical-iPad testing has been performed. In particular, validate Apple Pencil palm interaction, custom text selection, multi-touch zoom, scrolling, and Safari standalone/offline behavior on the target iPadOS version. A successful build or API test does not prove those interactions work on a device.
 
 WebMCP registration is feature-detected; no supported browser context was available for its contract check.
 
@@ -91,3 +91,24 @@ Selection performance follow-up: all 33 unit tests, typecheck, lint and build pa
 Word-selection accuracy and question markers: typecheck, lint, all 35 unit tests and production build passed. Regression tests cover short-line endpoints, reverse direction, empty text and aligned columns. User reported that Safari selection works in some areas but remains inconsistent elsewhere, and requested retaining whole-word selection. Q badge placement/click behavior and thumbnail markers still require visual verification.
 
 Citation gesture follow-up: typecheck, lint and build passed. Manually verify a citation click, a drag starting on citation text, keyboard activation and dragging across existing annotations. The region-dependent Safari report remains only partially diagnosed without a specific failing plain-text example.
+
+
+## Text-layer browser regression — 2026-09-10
+
+The user explicitly authorized browser testing. Earlier entries noting untested browser behavior describe earlier revisions.
+
+- Typecheck, lint, all 37 unit tests, production build and isolated HTTP integration tests passed.
+- Compared the previously deployed selection code with the text-layer implementation in isolated temporary libraries. A first text-layer prototype still jumped to an unrelated heading during WebKit cross-line dragging; switching to PDF.js TextLayerBuilder's full selection handling resolved the automated reproduction.
+- Chromium and WebKit pass cross-line/reverse drags, selection persistence during dragging and tooltip opening, whole-word completion, compact tooltip size, direct color saving of quote/style/note/tags, Q marker presence, and selection after zoom.
+- iPad-emulated WebKit passes the custom pointer path and the same persistence/color-save checks, with an empty native Selection and native text selection disabled.
+- Browser checks use the three-page fixture and remove ReadableStream async iteration to exercise Safari 26.0.1's missing API. They do not emulate every WebKit 26.0.1 behavior: the pinned Playwright WebKit build is 26.6 on Linux.
+- Physical Mac Safari/iPadOS behavior, Apple Pencil/palm input, the operating system's copy popup and arbitrary PDF layouts still need device verification. Tablet pointer gestures in the regression are synthetic; screenshots and native-selection assertions cannot prove absence of every iPadOS system UI.
+- The local example checkout is inspected as reference only and is not committed or deployed.
+
+Run after `npm ci && npm run build`:
+
+```sh
+docker run --rm --ipc=host   -v "$PWD:$PWD" -w "$PWD"   mcr.microsoft.com/playwright:v1.63.0-noble npm run test:browser
+```
+
+The browser suite creates a temporary SQLite database and fixture PDF, then removes them. Screenshots and selection traces go to ignored `test-results/` (override with `BROWSER_ARTIFACT_DIR`). Never point it at the user's real library.

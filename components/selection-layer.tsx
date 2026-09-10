@@ -5,6 +5,7 @@ import {
   useRef,
   useState,
   type Ref,
+  type RefObject,
 } from 'react';
 import type { Annotation, Rect } from '@/lib/model';
 import { selectWords, type Word } from '@/lib/pdf';
@@ -26,10 +27,36 @@ type Range = { words: Word[]; start: number; end: number };
 export default function SelectionLayer({
   ref,
   draft,
+  nativeContainer,
 }: {
   ref: Ref<SelectionLayerHandle>;
   draft?: Rect[];
+  nativeContainer?: RefObject<HTMLDivElement | null>;
 }) {
+  const [nativeActive, setNativeActive] = useState(false);
+  useEffect(() => {
+    const update = () => {
+      const selection = window.getSelection();
+      setNativeActive(
+        !!selection &&
+          !selection.isCollapsed &&
+          !!nativeContainer?.current?.contains(selection.anchorNode) &&
+          !!nativeContainer.current.contains(selection.focusNode),
+      );
+    };
+    document.addEventListener('selectionchange', update);
+    update();
+    return () => document.removeEventListener('selectionchange', update);
+  }, [nativeContainer]);
+  const previousDraft = useRef(draft);
+  useEffect(() => {
+    if (previousDraft.current && !draft) {
+      const selection = window.getSelection();
+      if (selection && nativeContainer?.current?.contains(selection.anchorNode))
+        selection.removeAllRanges();
+    }
+    previousDraft.current = draft;
+  }, [draft, nativeContainer]);
   const [rects, setRects] = useState<Rect[]>();
   const last = useRef<Range | undefined>(undefined);
   const [queue] = useState(() =>
@@ -64,6 +91,8 @@ export default function SelectionLayer({
     [queue],
   );
   return (
-    <HighlightLayer annotations={noAnnotations} selection={rects ?? draft} />
+    <div style={{ visibility: nativeActive ? 'hidden' : undefined }}>
+      <HighlightLayer annotations={noAnnotations} selection={rects ?? draft} />
+    </div>
   );
 }

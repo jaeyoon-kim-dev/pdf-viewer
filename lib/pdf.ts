@@ -94,6 +94,14 @@ async function extractPage(
       });
     }
   }
+  return layoutWords(words, n, viewport.width, viewport.height);
+}
+export function layoutWords(
+  words: Word[],
+  n: number,
+  width: number,
+  height: number,
+): PageText {
   // Preserve PDF content reading order, grouping adjacent runs into lines.
   const lines: Line[] = [];
   for (const word of words) {
@@ -112,7 +120,7 @@ async function extractPage(
     line.w = Math.max(line.w, word.x + word.w - line.x);
     line.h = Math.max(line.h, word.y + word.h - line.y);
   }
-  return { words, lines, width: viewport.width, height: viewport.height };
+  return { words, lines, width, height };
 }
 type WordLine = {
   indices: number[];

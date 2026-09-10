@@ -32,7 +32,8 @@
     "next-env.d.ts",
     "components/ui/**",
     "hooks/use-mobile.ts",
-    "public/pdfjs/**"
+    "public/pdfjs/**",
+    "example/**"
   ],
   "rules": {
     "no-array-constructor": "error",

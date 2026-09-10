@@ -17,7 +17,7 @@ For iPad access, put the app behind HTTPS on your local network or private VPN. 
 - Upload searchable PDFs up to 40 MB; permanent `/papers/<uuid>` URLs and database-backed last reading positions. In-app collection links jump to their source.
 - Paper titles and tags, library search, tag filtering.
 - Continuous vertical, continuous horizontal, single-page, and two-page layouts; zoom, text search, light/dark/sepia themes.
-- Click a word or drag text to highlight, underline, or create a memo. Mouse selection appears on press; live updates are paced to display frames. Pen toggle enables handwriting. Every annotation supports a note and any number of collection types.
+- Click a word or drag text to highlight, underline, or create a memo. Desktop dragging uses the PDF.js text layer; completed selections snap to whole words. iPad uses measured text bounds with custom selection feedback. Pen toggle enables handwriting. Every annotation supports a note and any number of collection types.
 - Built-in Phrases and Questions, plus user-created types such as Ideas and Limitations. Questions can be marked resolved.
 - In-place previews for recognized citations and figures/tables. Citation information is looked up through Crossref, with possible matches explicitly labeled.
 - Save/unsave toggle for Read later inside reference previews. The reading list groups matched works and retains source backlinks.
@@ -83,3 +83,8 @@ Safari 18+ is the compatibility target using PDF.js’s legacy build and explici
 Highlights blend with page text to preserve contrast, including thumbnail previews; dark pages use screen blending.
 
 Question-tagged annotations show a Q marker on the PDF and page thumbnails; click the page marker to open the question. Selection remains word-based.
+
+
+The compact annotation tooltip saves when you click a color. Choose Highlight/Underline/Note and Question/Phrase first; notes remain optional. More options opens the full editor for existing annotations and custom collection types.
+
+Browser regression tests run against a temporary library using Playwright. See [Validation](docs/VALIDATION.md) for the Docker command and device limitations.
