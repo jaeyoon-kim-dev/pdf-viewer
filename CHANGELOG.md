@@ -77,3 +77,8 @@ Initial local application:
 - Store last reading position in SQLite while keeping paper URLs free of query/hash state; preserve in-app source jumps via session storage.
 - Remember tooltip choices in local storage and restore the annotation sidebar quote bar.
 - Use matching PDF.js legacy library/worker builds for Safari compatibility.
+
+## Crisp highlights and Safari diagnostics — 2026-09-10
+
+- Separate highlight fills from other annotations and blend them with the PDF to preserve glyph contrast, including page thumbnails and dark mode.
+- Prevent native canvas dragging and tolerate pointer capture failures. Surface text extraction errors on already-rendered pages to diagnose unavailable selection/citations.

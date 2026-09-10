@@ -101,3 +101,5 @@ Before using a restored snapshot, preserve pending edits on devices. A database 
 There are no app hosting fees or Cloudflare dependencies when run on your server. You supply disk, compute, power, and any domain/VPN costs. PDF rendering and extraction happen on the reading device. The optional citation-information lookup calls Crossref on the internet and sends the selected reference text. The library remains readable when that lookup is unavailable.
 
 Reading positions are included in SQLite backups. Startup applies migration 0002 for the reading_positions table automatically. Tooltip preferences remain browser-local and are not included in database backups. This build packages the PDF.js legacy worker alongside the legacy library for Safari 18+ compatibility.
+
+After updating browser compatibility code, reload open reader tabs to load the new client bundle and legacy worker.

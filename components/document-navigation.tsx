@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { PDFDocumentProxy, RenderTask } from 'pdfjs-dist';
+import HighlightLayer from './highlight-layer';
 import { X } from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import type { Annotation } from '@/lib/model';
@@ -74,6 +75,7 @@ function Thumbnail({
     >
       <div className="thumbnail-sheet" style={{ height: 140 * aspect }}>
         <canvas ref={canvas} aria-hidden="true" />
+        <HighlightLayer annotations={annotations} thumbnail />
         <svg
           className="thumbnail-annotations"
           viewBox="0 0 1 1"
@@ -113,7 +115,7 @@ function Thumbnail({
                       width={r.w}
                       height={r.h}
                       fill={a.color}
-                      fillOpacity={0.38}
+                      fillOpacity={0}
                     />
                   ),
                 )

@@ -55,3 +55,5 @@ Prefer dense reading UI with minimal redundant borders and padding, particularly
 - Citation preview follows the supplied Scholar screenshot: grouped citation buttons and arrows in the header, blue article title, single-line metadata, fading abstract, Save/Cite/Search actions and pill access links. Unavailable citation/version counts are omitted.
 - Preserve tooltip color/style/Question/Phrase choices locally and distinguish source quotes from personal notes with a quote bar.
 - Target Safari 18+ with the PDF.js compatibility build; verify real iPad behavior separately.
+
+- Highlight fills must retain glyph contrast in light, dark and sepia views and in sidebar thumbnails.

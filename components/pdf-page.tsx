@@ -4,6 +4,7 @@ import {
   rectAnchor,
   type ReaderAnchor,
 } from '@/lib/popover-anchor';
+import HighlightLayer from './highlight-layer';
 import { StickyNote } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { PDFDocumentProxy, RenderTask } from 'pdfjs-dist';
@@ -279,7 +280,11 @@ export default function PdfPage(props: Props) {
     if (e.button !== 0 || (e.target as HTMLElement).closest('button')) return;
     if (gesture.current?.kind === 'ink' && e.pointerType === 'touch') return;
     pointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
-    e.currentTarget.setPointerCapture(e.pointerId);
+    try {
+      e.currentTarget.setPointerCapture(e.pointerId);
+    } catch {
+      // A failed Safari capture must not abort initialization of the drag.
+    }
     if (pointers.current.size > 1) {
       gesture.current = undefined;
       setSelection(undefined);
@@ -437,12 +442,14 @@ export default function PdfPage(props: Props) {
         onPointerMove={move}
         onPointerUp={up}
         onPointerCancel={cancel}
+        onDragStart={(e) => e.preventDefault()}
         onContextMenu={(e) => e.preventDefault()}
         aria-label={`PDF page ${number}`}
       >
         <canvas
           ref={canvas}
           className="pdf-canvas"
+          draggable={false}
           style={{ opacity: painted && active ? 1 : 0 }}
           aria-label={`Rendered PDF page ${number}`}
         />
@@ -455,6 +462,18 @@ export default function PdfPage(props: Props) {
             above.
           </div>
         )}
+        {active && error && !text && painted && (
+          <div className="page-text-notice" role="alert">
+            Text selection unavailable: {error}
+          </div>
+        )}
+        <HighlightLayer
+          annotations={annotations}
+          selection={
+            selection?.rects ||
+            (props.draft?.page === number ? props.draft.rects : [])
+          }
+        />
         <svg
           viewBox="0 0 1 1"
           preserveAspectRatio="none"
@@ -486,7 +505,7 @@ export default function PdfPage(props: Props) {
                     width={r.w}
                     height={r.h}
                     fill={a.color}
-                    fillOpacity={0.32}
+                    fillOpacity={0}
                   />
                 ),
               )}
@@ -501,20 +520,6 @@ export default function PdfPage(props: Props) {
                 />
               )}
             </g>
-          ))}
-          {(
-            selection?.rects ||
-            (props.draft?.page === number ? props.draft.rects : [])
-          )?.map((r, i) => (
-            <rect
-              key={i}
-              x={r.x}
-              y={r.y}
-              width={r.w}
-              height={r.h}
-              fill="#60a5fa"
-              fillOpacity={0.4}
-            />
           ))}
           {ink.length > 0 && (
             <polyline
