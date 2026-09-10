@@ -1,0 +1,62 @@
+%PDF-1.7
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [3 0 R 5 0 R 7 0 R] /Count 3 >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 9 0 R >> >> /Contents 4 0 R /Annots [10 0 R 11 0 R] >>
+endobj
+4 0 obj
+<< /Length 211 >>
+stream
+BT /F1 20 Tf 60 740 Td (A fixture for connected reading) Tj 0 -36 Td /F1 12 Tf (Drag across this sentence to collect a useful phrase.) Tj 0 -25 Td (See Figure 1 and citation [1] without leaving this page.) Tj ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 9 0 R >> >> /Contents 6 0 R >>
+endobj
+6 0 obj
+<< /Length 219 >>
+stream
+BT /F1 18 Tf 60 740 Td (Results) Tj ET 0.2 0.4 0.8 RG 60 300 m 500 300 l S 60 300 m 60 650 l S 70 330 m 180 390 l 280 440 l 400 580 l S BT /F1 12 Tf 60 270 Td (Figure 1: Reading progress across repeated sessions.) Tj ET
+endstream
+endobj
+7 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 9 0 R >> >> /Contents 8 0 R >>
+endobj
+8 0 obj
+<< /Length 165 >>
+stream
+BT /F1 18 Tf 60 740 Td (References) Tj /F1 12 Tf 0 -40 Td ([1] Test, A. Connected reading and useful phrases.) Tj 0 -20 Td (Journal of Example Research. 2024.) Tj ET
+endstream
+endobj
+9 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+10 0 obj
+<< /Type /Annot /Subtype /Link /Rect [82 675 135 690] /Dest [5 0 R /XYZ 60 640 null] /Border [0 0 0] >>
+endobj
+11 0 obj
+<< /Type /Annot /Subtype /Link /Rect [190 675 212 690] /Dest [7 0 R /XYZ 60 700 null] /Border [0 0 0] >>
+endobj
+xref
+0 12
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000127 00000 n 
+0000000277 00000 n 
+0000000539 00000 n 
+0000000665 00000 n 
+0000000935 00000 n 
+0000001061 00000 n 
+0000001277 00000 n 
+0000001347 00000 n 
+0000001467 00000 n 
+trailer
+<< /Size 12 /Root 1 0 R >>
+startxref
+1588
+%%EOF

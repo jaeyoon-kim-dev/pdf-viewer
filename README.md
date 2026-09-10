@@ -1,16 +1,57 @@
 # Paperthread
 
-A personal PDF library with stable paper URLs, linked annotations, citation previews, and extensible collections for phrases, questions, ideas, and future reading.
+A self-hosted PDF reading library for desktop and iPad. Upload a paper once, give it tags, and keep annotations and collected thoughts linked to its exact pages.
 
-Implementation is in progress. Requirements and assumptions are tracked in [docs/REQUIREMENTS.md](docs/REQUIREMENTS.md). Setup, architecture, validation, and limitations are maintained alongside the implementation.
+## Run with Docker
+
+```sh
+docker compose up -d --build
+```
+
+Open **http://localhost:3080** on the server. The default port mapping is loopback-only. The named `paperthread-data` volume contains both SQLite and the original PDFs and survives container replacement.
+
+For iPad access, put the app behind HTTPS on your local network or private VPN. Follow [Deployment](docs/DEPLOYMENT.md) for Caddy, access control, backups, and restoration. No Cloudflare account or cloud storage is needed.
+
+## Features
+
+- Upload searchable PDFs up to 40 MB; permanent `/papers/<uuid>` URLs, page links, and annotation links.
+- Paper titles and tags, library search, tag filtering.
+- Continuous vertical, continuous horizontal, single-page, and two-page layouts; zoom, text search, light/dark/sepia themes.
+- Drag text to highlight, underline, or create a memo. Pen toggle enables handwriting. Every annotation supports a note and any number of collection types.
+- Built-in Phrases and Questions, plus user-created types such as Ideas and Limitations. Questions can be marked resolved.
+- In-place previews for recognized citations and figures/tables. Citation information is looked up through Crossref, with possible matches explicitly labeled.
+- Read-later switch inside reference previews. The reading list groups matched works and retains source backlinks.
+- Installable PWA; explicit offline paper download; local annotation outbox and conflict resolution on reconnection.
+- JSON export of library records, including stable IDs, source anchors, tags, types, and ink coordinates.
+
+This is an initial implementation, not full Google Scholar or Zotero feature parity. See [Limitations and validation](docs/VALIDATION.md), especially real-iPad testing and PDF extraction coverage.
 
 ## Development
 
-Requires Node 22.13 or newer.
+Requires Node **22.13+** (tested on 22.22.2) and npm.
 
 ```sh
 npm ci
 npm run dev
 ```
 
-The scaffold uses React, Vinext, PDF.js, Cloudflare D1 for records, and R2 for PDF bytes. Local bindings use project-local Wrangler storage. Production access must remain private for this single-owner app.
+Development applies pending SQLite migrations and copies the installed PDF.js worker, fonts, character maps, and WASM files. Data lives in `./data` unless `DATA_DIR` is set. The service worker registers only in production to avoid caching development modules.
+
+```sh
+npm run typecheck
+npm run lint
+npm test
+npm run build
+npm run test:integration
+npm start
+```
+
+`npm start` serves the production build on port 3000. Set `PORT` to change it. For direct Node use on an untrusted network, add access control at the reverse proxy. The app is designed for a single private owner and does not have public registration or multi-user authorization.
+
+## Documentation
+
+- [Requirements and decisions](docs/REQUIREMENTS.md)
+- [Architecture and PKM integration](docs/ARCHITECTURE.md)
+- [Deployment, HTTPS, and backups](docs/DEPLOYMENT.md)
+- [Validation and known limitations](docs/VALIDATION.md)
+- [Change log](CHANGELOG.md)

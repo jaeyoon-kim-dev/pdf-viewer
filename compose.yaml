@@ -1,0 +1,18 @@
+services:
+  paperthread:
+    build: .
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:${PAPERTHREAD_PORT:-3080}:3000"
+    environment:
+      NODE_ENV: production
+      DATA_DIR: /app/data
+      PORT: 3000
+      VINEXT_TRUST_PROXY: ${VINEXT_TRUST_PROXY:-0}
+      VINEXT_TRUSTED_HOSTS: ${VINEXT_TRUSTED_HOSTS:-}
+    volumes:
+      - paperthread-data:/app/data
+    init: true
+    stop_grace_period: 20s
+volumes:
+  paperthread-data:

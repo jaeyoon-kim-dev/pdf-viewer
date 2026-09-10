@@ -14,9 +14,14 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: 'Paperthread · Your reading library',
-  description: 'Read papers, annotate ideas, and keep every thought connected to its source.',
+  description:
+    'Read papers, annotate ideas, and keep every thought connected to its source.',
   manifest: '/manifest.webmanifest',
-  appleWebApp: { capable: true, title: 'Paperthread', statusBarStyle: 'default' },
+  appleWebApp: {
+    capable: true,
+    title: 'Paperthread',
+    statusBarStyle: 'default',
+  },
   icons: { icon: '/favicon.svg', apple: '/icon-192.png' },
 };
 

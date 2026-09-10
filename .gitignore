@@ -36,3 +36,11 @@ next-env.d.ts
 /.wrangler/
 /outputs/
 /work/
+
+/public/pdfjs/
+*.tsbuildinfo
+
+/data/
+/backups/
+
+!.env.example

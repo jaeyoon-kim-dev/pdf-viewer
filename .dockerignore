@@ -1,0 +1,12 @@
+node_modules
+.git
+.env*
+data
+backups
+dist
+.wrangler
+.vinext
+.next
+public/pdfjs
+*.tsbuildinfo
+.openai

@@ -10,7 +10,9 @@
 - Extensible entity/collection types, initially Phrases and Questions. User can create Ideas, Limitations, or other types. An annotation can belong to multiple types.
 - Read-later toggle inside citation preview, collected centrally with source backlinks.
 - No separate text annotation mode. Dragging text selects it for annotation; separate pen toggle enables handwriting.
-- User requested horizontal paper scrolling. Pending clarification: start-on-text selects, start-on-margin horizontal swipe changes page.
+- Multiple confirmed viewing options: continuous vertical, continuous horizontal, single page, two pages. Light, dark, and sepia themes.
+- Paper-level tags separate from annotation collection types.
+- Confirmed hosting: own Linux server / Docker; serve locally, do not publish to Sites.
 - Keep documentation and meaningful Git commits.
 - Future PKM integration through stable identities and portable exports; no task manager in this scope.
 
@@ -18,8 +20,8 @@
 
 - Searchable PDFs first. Scans remain readable and support pen/page notes; OCR is not included.
 - Existing PDF destinations and heuristic reference extraction are used; extracted citation text may be sent to Crossref for bibliographic metadata. No full-document external processing.
-- One owner; Sites deployment is private. Independent hosting must be behind a private authentication proxy.
-- Server database and object storage are authoritative. Offline cached documents and pending annotation changes are device-local until synchronized.
+- One shared personal library. Docker binds to loopback by default; private network/HTTPS reverse proxy provides access control for the iPad.
+- Server SQLite database and filesystem are authoritative. Offline cached documents and pending annotation changes are device-local until synchronized.
 
 ## Acceptance goals
 
