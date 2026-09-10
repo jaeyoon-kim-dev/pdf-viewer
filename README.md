@@ -43,6 +43,8 @@ npm run lint
 npm test
 npm run build
 npm run test:integration
+# Optional: also test live Crossref metadata
+CROSSREF_LIVE=1 npm run test:integration
 npm start
 ```
 

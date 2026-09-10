@@ -9,6 +9,20 @@
 
 Run the checks documented in README. Integration fixtures never populate the real library. The generated three-page sample at `tests/fixtures/sample.pdf` is available for manual testing.
 
+## Recorded run — 2026-09-10
+
+- `npm run typecheck`: passed.
+- `npm run lint`: passed.
+- `npm test`: 14 tests passed, including a real three-page PDF fixture and IndexedDB outbox scenarios.
+- `npm run build`: passed with React 19.2.8, Vinext 1.0.0-beta.9, Vite 8.0.16, and PDF.js 6.3.289.
+- `CROSSREF_LIVE=1 npm run test:integration`: passed, including a live DOI lookup through Crossref and forwarded HTTPS-origin handling.
+- `docker compose up -d --build --wait`: passed; container healthy and bound to `127.0.0.1:3080`.
+- `GET /api/health`: returned `{"status":"ok"}` from the running container.
+- `npm audit --omit=dev`: no reported production dependency vulnerabilities.
+- Full development audit: four moderate findings remain in Drizzle Kit's old esbuild loader chain. The automated suggested fix would downgrade Drizzle Kit to an incompatible older version, so it was not applied. This loader is used for schema tooling, not the app's request handlers; the current Docker image also retains build dependencies. Production packages with known high advisories were updated.
+
+No cloud deployment was performed. No reverse proxy or network configuration was changed.
+
 ## Validation still required
 
 No browser interaction testing or physical-iPad testing has been performed. In particular, validate Apple Pencil palm interaction, custom text selection, multi-touch zoom, scrolling, and Safari standalone/offline behavior on the target iPadOS version. A successful build or API test does not prove those interactions work on a device.
