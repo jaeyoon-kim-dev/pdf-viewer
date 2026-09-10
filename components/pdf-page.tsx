@@ -17,8 +17,7 @@ import {
 } from '@/lib/pdf';
 import {
   referenceHotspots,
-  nearestReference,
-  destinationExcerpt,
+  resolveReferenceLink,
   type Reference,
   type Hotspot,
 } from '@/lib/references';
@@ -26,6 +25,7 @@ type Props = {
   doc: PDFDocumentProxy;
   number: number;
   width: number;
+  fitHeight?: number;
   defaultAspect: number;
   annotations: Annotation[];
   references: Reference[];
@@ -57,11 +57,14 @@ type Gesture = {
   annotation?: Annotation;
 };
 export default function PdfPage(props: Props) {
-  const { doc, number, width, annotations, references, pen, layout } = props;
+  const { doc, number, annotations, references, pen, layout } = props;
   const wrapper = useRef<HTMLDivElement>(null);
   const canvas = useRef<HTMLCanvasElement>(null);
   const [active, setActive] = useState(false);
   const [text, setText] = useState<PageText>();
+  const width = props.fitHeight
+    ? props.fitHeight / (text ? text.height / text.width : props.defaultAspect)
+    : props.width;
   const [error, setError] = useState('');
   const [painted, setPainted] = useState(false);
   const [nativeSpots, setNativeSpots] = useState<Hotspot[]>([]);
@@ -145,9 +148,30 @@ export default function PdfPage(props: Props) {
       const page = await doc.getPage(number);
       const viewport = page.getViewport({ scale: 1 });
       const links = await page.getAnnotations();
+      const sourceText = await pageText(doc, number);
       const spots: Hotspot[] = [];
       for (const link of links) {
         if (!link.dest && !link.url) continue;
+        const [x1, y1, x2, y2] = [
+          ...viewport.convertToViewportPoint(link.rect[0], link.rect[1]),
+          ...viewport.convertToViewportPoint(link.rect[2], link.rect[3]),
+        ];
+        const bounds = {
+          x: Math.min(x1, x2) / viewport.width,
+          y: Math.min(y1, y2) / viewport.height,
+          w: Math.abs(x2 - x1) / viewport.width,
+          h: Math.abs(y2 - y1) / viewport.height,
+        };
+        const label = sourceText.words
+          .filter(
+            (word) =>
+              word.x + word.w > bounds.x &&
+              word.x < bounds.x + bounds.w &&
+              word.y + word.h > bounds.y &&
+              word.y < bounds.y + bounds.h,
+          )
+          .map((word) => word.text)
+          .join(' ');
         let reference: Reference | undefined;
         if (link.dest) {
           try {
@@ -162,29 +186,51 @@ export default function PdfPage(props: Props) {
                 : await doc.getPageIndex(dest[0])) + 1;
             const targetPage = await doc.getPage(target);
             const vp = targetPage.getViewport({ scale: 1 });
-            const coords = vp.convertToViewportPoint(
-              dest[2] || 0,
-              typeof dest[3] === 'number' ? dest[3] : vp.height,
+            const mode = dest[1]?.name;
+            const top =
+              mode === 'XYZ'
+                ? dest[3]
+                : mode === 'FitH' || mode === 'FitBH'
+                  ? dest[2]
+                  : mode === 'FitR'
+                    ? dest[5]
+                    : undefined;
+            const y =
+              typeof top === 'number'
+                ? Math.max(
+                    0,
+                    Math.min(
+                      1,
+                      vp.convertToViewportPoint(0, top)[1] / vp.height,
+                    ),
+                  )
+                : undefined;
+            reference = resolveReferenceLink(
+              references,
+              target,
+              y,
+              label,
+              typeof link.dest === 'string' ? link.dest : '',
+              bounds,
+              sourceText.lines
+                .filter(
+                  (line) =>
+                    line.y + line.h > bounds.y &&
+                    line.y < bounds.y + bounds.h &&
+                    line.x + line.w > bounds.x &&
+                    line.x < bounds.x + bounds.w,
+                )
+                .map((line) => line.text)
+                .join(' '),
             );
-            const y = Math.max(0, Math.min(1, coords[1] / vp.height));
-            reference = nearestReference(references, target, y);
-            if (!reference || Math.abs(reference.y - y) > 0.18) {
-              const content = await pageText(doc, target);
-              const text = destinationExcerpt(content.lines, y);
-              const isFigure = /fig|table/i.test(String(link.dest));
-              reference = {
-                id: String(link.dest),
-                label: isFigure ? 'Figure / table' : 'Linked reference',
-                text,
-                page: target,
-                y,
-                kind: isFigure ? 'figure' : 'citation',
-              };
-            }
           } catch {
             continue;
           }
-        } else if (/doi\.org|arxiv\.org/i.test(link.url))
+        } else if (
+          /^https?:\/\/(?:dx\.)?doi\.org\/|^https?:\/\/(?:export\.)?arxiv\.org\//i.test(
+            link.url,
+          )
+        )
           reference = {
             id: link.url,
             label: 'Cited article',
@@ -194,15 +240,8 @@ export default function PdfPage(props: Props) {
             kind: 'citation',
           };
         if (!reference) continue;
-        const [x1, y1, x2, y2] = [
-          ...viewport.convertToViewportPoint(link.rect[0], link.rect[1]),
-          ...viewport.convertToViewportPoint(link.rect[2], link.rect[3]),
-        ];
         spots.push({
-          x: Math.min(x1, x2) / viewport.width,
-          y: Math.min(y1, y2) / viewport.height,
-          w: Math.abs(x2 - x1) / viewport.width,
-          h: Math.abs(y2 - y1) / viewport.height,
+          ...bounds,
           references: [reference],
         });
       }

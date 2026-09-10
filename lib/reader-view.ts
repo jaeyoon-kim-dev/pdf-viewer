@@ -4,6 +4,7 @@ export function fittedWidth(
   height: number,
   aspect: number,
   two: boolean,
+  verticalInset = 78,
 ) {
   const availableWidth = Math.max(
     40,
@@ -11,7 +12,7 @@ export function fittedWidth(
   );
   return {
     width: availableWidth,
-    page: Math.min(availableWidth, Math.max(40, height - 80) / aspect),
+    page: Math.max(40, height - verticalInset) / aspect,
   };
 }
 export function clampZoom(value: number) {

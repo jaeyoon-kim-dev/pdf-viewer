@@ -21,6 +21,7 @@ import {
   Minus,
   Plus,
   PanelRight,
+  PanelLeft,
   PenLine,
   StickyNote,
   Download,
@@ -46,6 +47,7 @@ import { loadPdf, pageText } from '@/lib/pdf';
 import { extractReferences, type Reference } from '@/lib/references';
 import type { Annotation } from '@/lib/model';
 import PdfPage from './pdf-page';
+import DocumentNavigation from './document-navigation';
 import AnnotationEditor from './annotation-editor';
 import ReferencePreview from './reference-preview';
 import PaperDetails from './paper-details';
@@ -64,13 +66,22 @@ export default function Reader({ paperId }: { paperId: string }) {
   const [zoom, setZoom] = useState(100);
   const [fitMode, setFitMode] = useState<FitMode>('width');
   const [height, setHeight] = useState(800);
+  const [pageChrome, setPageChrome] = useState(78);
   const [baseWidth, setBaseWidth] = useState(816);
   const [editingAnchor, setEditingAnchor] = useState<ReaderAnchor>();
   const [layout, setLayout] = useState<Layout>('continuous');
+  const lastContinuous = useRef<Layout>('continuous');
+  const lastPaged = useRef<Layout>('single');
+  useEffect(() => {
+    if (layout === 'continuous' || layout === 'horizontal')
+      lastContinuous.current = layout;
+    else lastPaged.current = layout;
+  }, [layout]);
   const [theme, setTheme] = useState('light');
   const [pen, setPen] = useState(false);
   const [placingMemo, setPlacingMemo] = useState(false);
   const [sidebar, setSidebar] = useState(true);
+  const [navigationOpen, setNavigationOpen] = useState(false);
   const [panelTab, setPanelTab] = useState('notes');
   const [width, setWidth] = useState(850);
   const [editing, setEditing] = useState<Annotation>();
@@ -190,6 +201,13 @@ export default function Reader({ paperId }: { paperId: string }) {
     const resize = new ResizeObserver((entries) => {
       setWidth(entries[0].contentRect.width);
       setHeight(entries[0].contentRect.height);
+      const track = scroller.current?.querySelector('.page-track');
+      if (track) {
+        const style = getComputedStyle(track);
+        setPageChrome(
+          parseFloat(style.paddingTop) + parseFloat(style.paddingBottom) + 30,
+        );
+      }
     });
     resize.observe(scroller.current);
     return () => resize.disconnect();
@@ -229,7 +247,7 @@ export default function Reader({ paperId }: { paperId: string }) {
     );
     return () => clearTimeout(timer);
   }, [doc, goto]);
-  const fits = fittedWidth(width, height, aspect, layout === 'two');
+  const fits = fittedWidth(width, height, aspect, layout === 'two', pageChrome);
   const pageWidth =
     fitMode === 'custom' ? (baseWidth * zoom) / 100 : fits[fitMode];
   const effectiveZoom = (pageWidth / baseWidth) * 100;
@@ -507,6 +525,40 @@ export default function Reader({ paperId }: { paperId: string }) {
         </div>
       </header>
       <div className="reader-toolbar">
+        <button
+          className={`icon-button ${navigationOpen ? 'is-active' : ''}`}
+          aria-label="Toggle contents and pages sidebar"
+          title="Contents and pages"
+          aria-expanded={navigationOpen}
+          onClick={() => setNavigationOpen(!navigationOpen)}
+        >
+          <PanelLeft size={18} />
+        </button>
+        <Tabs
+          value={
+            layout === 'continuous' || layout === 'horizontal'
+              ? 'continuous'
+              : 'page'
+          }
+          onValueChange={(mode) => {
+            const next =
+              mode === 'continuous'
+                ? lastContinuous.current
+                : lastPaged.current;
+            setLayout(next);
+            if (mode === 'continuous')
+              requestAnimationFrame(() =>
+                document
+                  .getElementById(`page-${page}`)
+                  ?.scrollIntoView({ block: 'start', inline: 'start' }),
+              );
+          }}
+        >
+          <TabsList className="reading-flow-toggle" aria-label="Reading flow">
+            <TabsTrigger value="continuous">Continuous</TabsTrigger>
+            <TabsTrigger value="page">Page</TabsTrigger>
+          </TabsList>
+        </Tabs>
         <div className="button-row page-controls">
           <button
             className="icon-button"
@@ -722,6 +774,14 @@ export default function Reader({ paperId }: { paperId: string }) {
         </output>
       )}
       <div className="reader-body">
+        {navigationOpen && doc && (
+          <DocumentNavigation
+            doc={doc}
+            page={page}
+            onNavigate={goto}
+            onClose={() => setNavigationOpen(false)}
+          />
+        )}
         <div
           ref={scroller}
           className={`reader-scroll layout-${layout}`}
@@ -761,6 +821,11 @@ export default function Reader({ paperId }: { paperId: string }) {
                 doc={doc!}
                 number={n}
                 width={pageWidth}
+                fitHeight={
+                  fitMode === 'page'
+                    ? Math.max(40, height - pageChrome)
+                    : undefined
+                }
                 defaultAspect={aspect}
                 annotations={annotations.filter((a) => a.page === n)}
                 references={references}

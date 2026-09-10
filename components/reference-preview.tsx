@@ -1,6 +1,6 @@
 'use client';
 import { createId } from '@/lib/id';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { PDFDocumentProxy, RenderTask } from 'pdfjs-dist';
 import {
   ArrowUpRight,
@@ -40,7 +40,7 @@ export default function ReferencePreview({
   const [index, setIndex] = useState(0);
   const reference = references[index];
   const [article, setArticle] = useState<Article>();
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [fullPage, setFullPage] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -57,6 +57,10 @@ export default function ReferencePreview({
       r.page === sourcePage &&
       r.reference === reference.text,
   );
+  const savedArticleRef = useRef(saved?.article);
+  useEffect(() => {
+    savedArticleRef.current = saved?.article;
+  }, [saved?.article]);
   useEffect(() => {
     let cancelled = false;
     let task: RenderTask | undefined;
@@ -76,8 +80,12 @@ export default function ReferencePreview({
         year: '',
         match: 'unresolved',
       };
-      const cached = articleCache.get(reference.text);
-      setArticle(cached || saved?.article || fallback);
+      const cached =
+        articleCache.get(reference.text) ||
+        (savedArticleRef.current?.match !== 'unresolved'
+          ? savedArticleRef.current
+          : undefined);
+      setArticle(cached || fallback);
       if (cached) {
         setLoading(false);
         return () => controller.abort();
@@ -127,7 +135,7 @@ export default function ReferencePreview({
       controller.abort();
       task?.cancel();
     };
-  }, [reference, doc, saved?.article]);
+  }, [reference, doc]);
   async function toggle(checked: boolean) {
     if (!article) return;
     setBusy(true);
@@ -169,7 +177,11 @@ export default function ReferencePreview({
             {article?.title || reference.label}
           </a>
         ) : reference.kind === 'citation' ? (
-          article?.title || reference.label
+          loading ? (
+            'Loading article details…'
+          ) : (
+            article?.title || reference.label
+          )
         ) : (
           reference.label
         )}
@@ -181,7 +193,10 @@ export default function ReferencePreview({
               [article?.venue, article?.year].filter(Boolean).join(', '),
             ]
               .filter(Boolean)
-              .join(' — ') || 'Original bibliography entry'
+              .join(' — ') ||
+            (loading
+              ? 'Fetching authors and publication…'
+              : 'Original bibliography entry')
           : `Page ${reference.page}`}
       </PopoverDescription>
       {references.length > 1 && (
@@ -207,17 +222,24 @@ export default function ReferencePreview({
           </button>
         </div>
       )}
-      {loading && (
-        <output className="muted">
-          {reference.kind === 'citation'
+      <output className="preview-loading-status" aria-live="polite">
+        {loading
+          ? reference.kind === 'citation'
             ? 'Looking up article information…'
-            : 'Rendering preview…'}
-        </output>
-      )}
+            : 'Rendering preview…'
+          : 'Preview ready'}
+      </output>
       {reference.kind === 'citation' ? (
         <>
-          <div className="scholar-card-abstract">
-            {article?.abstract ? (
+          <div className="scholar-card-abstract" aria-busy={loading}>
+            {loading && !article?.abstract ? (
+              <div className="preview-loading-lines" aria-hidden="true">
+                <span />
+                <span />
+                <span />
+                <span />
+              </div>
+            ) : article?.abstract ? (
               <>
                 <p className={expanded ? '' : 'abstract-collapsed'}>
                   {article.abstract}

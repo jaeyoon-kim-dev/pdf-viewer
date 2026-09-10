@@ -7,12 +7,14 @@ import {
   PenLine,
   Trash2,
   Link2,
-  CircleHelp,
-  Quote,
 } from 'lucide-react';
 import { PopoverTitle, PopoverDescription } from '@/components/ui/popover';
 import ReaderPopover from './reader-popover';
 import type { ReaderAnchor } from '@/lib/popover-anchor';
+import {
+  NativeSelect,
+  NativeSelectOption,
+} from '@/components/ui/native-select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
@@ -63,54 +65,85 @@ export default function AnnotationEditor({
       >
         <PopoverTitle className="sr-only">Annotate selected text</PopoverTitle>
         <PopoverDescription className="sr-only">
-          Choose a mark to save immediately, or add a note or collection.
+          Choose a color, annotation style and optional collections, then save.
         </PopoverDescription>
-        <div
-          className="selection-actions"
-          role="toolbar"
-          aria-label="Selected text actions"
-        >
+        <div className="selection-palette-row">
+          <div
+            className="color-options selection-palette"
+            aria-label="Annotation color"
+          >
+            {['#facc15', '#4ade80', '#60a5fa', '#f472b6', '#a78bfa'].map(
+              (color, i) => (
+                <button
+                  key={color}
+                  aria-label={['Yellow', 'Green', 'Blue', 'Pink', 'Purple'][i]}
+                  aria-pressed={draft.color === color}
+                  className={draft.color === color ? 'chosen' : ''}
+                  style={{ background: color }}
+                  onClick={() => setDraft({ ...draft, color })}
+                />
+              ),
+            )}
+          </div>
+          <NativeSelect
+            aria-label="Annotation style"
+            value={draft.kind}
+            onChange={(e) =>
+              setDraft({ ...draft, kind: e.target.value as Annotation['kind'] })
+            }
+          >
+            <NativeSelectOption value="highlight">Highlight</NativeSelectOption>
+            <NativeSelectOption value="underline">Underline</NativeSelectOption>
+            <NativeSelectOption value="note">Note</NativeSelectOption>
+          </NativeSelect>
+        </div>
+        <div className="selection-collections">
+          {(['question', 'phrase'] as const).map((type) => (
+            <label
+              className="type-option"
+              key={type}
+              htmlFor={`selection-${type}`}
+            >
+              <Checkbox
+                id={`selection-${type}`}
+                checked={draft.types.includes(type)}
+                onCheckedChange={(checked) =>
+                  setDraft({
+                    ...draft,
+                    types: checked
+                      ? [...new Set([...draft.types, type])]
+                      : draft.types.filter((value) => value !== type),
+                  })
+                }
+              />
+              {type === 'question' ? 'Question' : 'Phrase'}
+            </label>
+          ))}
+        </div>
+        {(draft.kind === 'note' || draft.types.includes('question')) && (
+          <textarea
+            aria-label={draft.types.includes('question') ? 'Question' : 'Note'}
+            rows={2}
+            maxLength={30000}
+            placeholder={
+              draft.types.includes('question')
+                ? 'What is your question?'
+                : 'Write a note…'
+            }
+            value={draft.note}
+            onChange={(e) => setDraft({ ...draft, note: e.target.value })}
+          />
+        )}
+        <div className="selection-footer">
+          <button className="text-button" onClick={() => setExpanded(true)}>
+            More options
+          </button>
           <button
+            className="primary-button"
             disabled={busy}
-            onClick={() => submit(false, { ...draft, kind: 'highlight' })}
+            onClick={() => submit()}
           >
-            <Highlighter size={17} />
-            Highlight
-          </button>
-          <button
-            disabled={busy}
-            onClick={() => submit(false, { ...draft, kind: 'underline' })}
-          >
-            <Underline size={17} />
-            Underline
-          </button>
-          <button onClick={() => setExpanded(true)}>
-            <StickyNote size={17} />
-            Note
-          </button>
-          <button
-            onClick={() => {
-              setDraft({
-                ...draft,
-                types: [...new Set([...draft.types, 'phrase'])],
-              });
-              setExpanded(true);
-            }}
-          >
-            <Quote size={17} />
-            Phrase
-          </button>
-          <button
-            onClick={() => {
-              setDraft({
-                ...draft,
-                types: [...new Set([...draft.types, 'question'])],
-              });
-              setExpanded(true);
-            }}
-          >
-            <CircleHelp size={17} />
-            Question
+            {busy ? 'Saving…' : 'Save'}
           </button>
         </div>
         {error && (

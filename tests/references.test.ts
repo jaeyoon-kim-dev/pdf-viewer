@@ -4,6 +4,7 @@ import {
   extractReferences,
   referenceHotspots,
   numberLabels,
+  resolveReferenceLink,
 } from '../lib/references.ts';
 import type { PageText } from '../lib/pdf.ts';
 function page(n: number, values: string[]): PageText {
@@ -76,4 +77,68 @@ void test('author-year references resolve without relying on numeric links', () 
     refs,
   );
   assert.equal(spots[0].references[0].label, 'Smith');
+});
+
+void test('standalone footer numbers never become citation hotspots', () => {
+  const refs = extractReferences([
+    page(2, ['References', '[1] Smith, A. First paper.']),
+  ]);
+  const footer = page(1, ['[1]']);
+  footer.lines[0].y = 0.91;
+  footer.words[0].y = 0.91;
+  assert.equal(referenceHotspots(footer, refs).length, 0);
+  assert.equal(
+    resolveReferenceLink(refs, 2, refs[0].y, '1', 'cite.1', {
+      x: 0.5,
+      y: 0.91,
+      w: 0.02,
+      h: 0.02,
+    }),
+    undefined,
+  );
+});
+void test('internal page and section navigation is not converted into a reference', () => {
+  const refs = extractReferences([
+    page(2, ['References', '[1] Smith, A. First paper.']),
+  ]);
+  const bounds = { x: 0.4, y: 0.4, w: 0.05, h: 0.02 };
+  assert.equal(
+    resolveReferenceLink(refs, 2, refs[0].y, '1', 'section.1', bounds),
+    undefined,
+  );
+  assert.equal(
+    resolveReferenceLink(refs, 2, undefined, '1', 'page.2', bounds),
+    undefined,
+  );
+  assert.equal(
+    resolveReferenceLink(refs, 2, refs[0].y + 0.15, '[1]', 'cite.1', bounds),
+    undefined,
+  );
+  assert.equal(
+    resolveReferenceLink(refs, 2, refs[0].y, 'Introduction', '', bounds),
+    undefined,
+  );
+});
+void test('explicit citation destinations and matching labels retain genuine previews', () => {
+  const refs = extractReferences([
+    page(2, ['References', '[1] Smith, A. First paper.']),
+  ]);
+  const bounds = { x: 0.4, y: 0.91, w: 0.05, h: 0.02 };
+  assert.equal(
+    resolveReferenceLink(
+      refs,
+      2,
+      refs[0].y,
+      '[1]',
+      'cite.Smith',
+      bounds,
+      'See [1] for details.',
+    )?.id,
+    refs[0].id,
+  );
+  assert.equal(
+    resolveReferenceLink(refs, 2, refs[0].y, '[1]', '', { ...bounds, y: 0.4 })
+      ?.id,
+    refs[0].id,
+  );
 });

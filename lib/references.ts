@@ -93,6 +93,9 @@ export function referenceHotspots(
   const spots: Hotspot[] = [];
   for (let l = 0; l < page.lines.length; l++) {
     const line = page.lines[l];
+    // Standalone folios and bracketed footer numbers are not citations.
+    if (/^\s*\[?\d+\]?\s*$/.test(line.text) && (line.y < 0.1 || line.y > 0.85))
+      continue;
     const patterns = [
       ...line.text.matchAll(
         /\[([\d\s,;–-]+)\]|\b(?:Fig(?:ure)?\.?|Table)\s+\d+[a-z]?|\b[A-Z][A-Za-z’'-]+(?:\s+et\s+al\.?)?\s*\(?,?\s*(?:19|20)\d{2}[a-z]?\)?/g,
@@ -160,4 +163,59 @@ export function destinationExcerpt(lines: Line[], y: number): string {
     .slice(0, 7)
     .map((l) => l.text)
     .join(' ');
+}
+
+/** Internal navigation is not automatically a scholarly reference. */
+export function resolveReferenceLink(
+  references: Reference[],
+  targetPage: number,
+  targetY: number | undefined,
+  label: string,
+  destinationName: string,
+  source: Rect,
+  sourceLine = label,
+): Reference | undefined {
+  const clean = label.trim();
+  if (
+    (source.y < 0.1 || source.y > 0.85) &&
+    /^\[?\d+\]?$/.test(sourceLine.trim())
+  )
+    return undefined;
+  if (
+    /^(?:page|section|subsection|chapter|equation|eq|toc|appendix)[.:_-]/i.test(
+      destinationName,
+    )
+  )
+    return undefined;
+  const explicitCitation = /^(?:cite|citation|bib|bibitem)[.:_-]/i.test(
+    destinationName,
+  );
+  const explicitFigure = /^(?:fig|figure|table)[.:_-]/i.test(destinationName);
+  const figure = clean.match(/\b(Fig(?:ure)?\.?|Table)\s*(\d+[a-z]?)/i);
+  const numeric = clean.match(/^\[?([\d,;\s–-]+)\]?$/);
+  const candidates = references.filter((ref) => {
+    if (ref.page !== targetPage) return false;
+    if (targetY === undefined || Math.abs(ref.y - targetY) > 0.04) return false;
+    if (ref.kind !== 'citation')
+      return !!(
+        explicitFigure ||
+        (figure &&
+          ref.id ===
+            `${/^table/i.test(figure[1]) ? 'table' : 'figure'}-${figure[2].toLowerCase()}`)
+      );
+    if (explicitFigure || figure) return false;
+    if (explicitCitation) return true;
+    if (numeric) return numberLabels(numeric[1]).includes(ref.label);
+    const author = clean.match(/[A-Z][A-Za-z’'-]+/g)?.[0];
+    const year = clean.match(/(?:19|20)\d{2}/)?.[0];
+    return !!(
+      author &&
+      year &&
+      ref.text.includes(author) &&
+      ref.text.includes(year)
+    );
+  });
+  return candidates.sort(
+    (a, b) => Math.abs(a.y - targetY!) - Math.abs(b.y - targetY!),
+  )[0];
 }

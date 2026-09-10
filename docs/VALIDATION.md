@@ -13,7 +13,7 @@ Run the checks documented in README. Integration fixtures never populate the rea
 
 - `npm run typecheck`: passed.
 - `npm run lint`: passed.
-- `npm test`: 23 tests passed, including a real three-page PDF fixture and IndexedDB outbox scenarios.
+- `npm test`: 26 tests passed, including a real three-page PDF fixture and IndexedDB outbox scenarios.
 - `npm run build`: passed with React 19.2.8, Vinext 1.0.0-beta.9, Vite 8.0.16, and PDF.js 6.3.289.
 - `CROSSREF_LIVE=1 npm run test:integration`: passed, including a live DOI lookup through Crossref and forwarded HTTPS-origin handling.
 - `docker compose up -d --build --wait`: passed; container healthy and bound to the private Tailscale interface at `100.111.111.100:3080`.
@@ -60,3 +60,7 @@ Manual follow-up: on desktop and narrow screens, verify the annotation bar is vi
 Latest annotation checks cover offline create/edit/delete undo and redo, restoring a synced tombstone revision, and clearing redo on a new action. Manual acceptance still required: drag text in both directions and release; confirm the toolbar remains next to the selection, click Highlight, refresh and confirm persistence, reopen/delete/undo; place sticky memos in page margins and reopen their pins. Test Cmd/Ctrl+Z outside and inside a textarea. No browser interaction testing was performed, so the reported tooltip issue is addressed in code but not yet verified in a browser.
 
 Citation refinement checks cover BibTeX escaping, publication metadata, Scholar search query encoding, and venue validation. Manually verify card anchoring, Show more, group-reference navigation, Read later persistence, Cite copy/fallback on private HTTP, and See in References without moving the main page. External reference screenshot was inspected; the application itself has not been browser-tested for visual fidelity.
+
+Added regression cases for bracketed footer folios, numbered native page/section links, overly distant reference targets, and genuine citations near the bottom of a text paragraph. Manually check the reported PDF for page-number hotspots, preview-loading shifts, and Read later/Show more stability. Browser verification remains outstanding.
+
+Final manual acceptance additions: verify palette-left/style-right tooltip layout and Save with Question/Phrase; toggle Continuous/Page after choosing horizontal/two-page views; open/hide Contents/Pages, navigate an outline entry and thumbnail; confirm Fit page fills reader height with both portrait and landscape pages and allows horizontal scrolling. Height-fit regression tests use floating-point tolerance. No browser interaction testing has been performed.

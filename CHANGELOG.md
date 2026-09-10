@@ -38,3 +38,15 @@ Initial local application:
 - Added original/BibTeX citation copying and inline bibliography context.
 - Retained Read later and added explicit Scholar search links without simulating unavailable Scholar metadata.
 - Added optional publication venue and a bounded client metadata cache.
+
+## Preview stability and reference filtering — 2026-09-10
+
+- Prevent Read later and library sync from restarting preview loading or collapsing expanded content.
+- Reserve loading space for article details and figures.
+- Exclude page-number folios and page/section navigation from citation previews; remove generic-link citation fallback and tighten destination matching.
+
+## Selection palette and document navigation — 2026-09-10
+
+- Selection tooltip now has a color palette, right-hand style selector, Question/Phrase toggles and Save.
+- Added Continuous/Page switching and a hideable left Contents/Pages sidebar with lazy thumbnails.
+- Fit page fills the available reading height using each page’s aspect ratio; wide pages scroll horizontally.

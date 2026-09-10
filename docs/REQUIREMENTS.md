@@ -41,3 +41,7 @@ Annotation tools must remain visible on narrow screens: a wrapping annotation ba
 Selecting text must retain the selection until a compact, source-anchored toolbar action saves it or the user dismisses it. Do not let the pointer gesture that opens a tooltip immediately dismiss it. Sticky memos can be placed at arbitrary page coordinates and expanded by clicking their pins. Annotation deletion and session Undo/Redo are required.
 
 Reference preview presentation should closely follow the Scholar card structure, rather than a generic modal form. Include an expandable abstract, publication metadata, Cite, PDF access when available, and original bibliography context inside the preview. Preserve the paper reading position and the custom Read later toggle.
+
+Page numbers must not become citation hotspots. Internal links need citation/figure semantics and a credible matching destination. Keep expanded preview content stable across library sync and Read later changes; indicate asynchronous metadata loading explicitly.
+
+Selection tooltip layout: color palette on the left, Highlight/Underline/Note selector on the right, Question/Phrase toggles below, explicit Save. Provide a top-level Continuous/Page toggle and a hideable left sidebar with Contents and Pages. Fit page must maximize page height inside the reader instead of shrinking to available width.
