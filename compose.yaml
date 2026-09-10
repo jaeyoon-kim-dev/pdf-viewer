@@ -3,7 +3,7 @@ services:
     build: .
     restart: unless-stopped
     ports:
-      - "127.0.0.1:${PAPERTHREAD_PORT:-3080}:3000"
+      - '${PAPERTHREAD_BIND_HOST:-127.0.0.1}:${PAPERTHREAD_PORT:-3080}:3000'
     environment:
       NODE_ENV: production
       DATA_DIR: /app/data

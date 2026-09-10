@@ -1,5 +1,12 @@
 # Change log
 
+## Reader refinements — 2026-09-10
+
+- Compact Zotero-inspired reader toolbar and neutral paper workspace.
+- Source-anchored, non-modal annotation editors and reference previews; no blur or backdrop.
+- Fit width, Fit page, Actual size, custom zoom, and Cmd/Ctrl zoom shortcuts.
+- Private Tailscale HTTP serving with secure random-ID fallback; HTTPS awaits tailnet enablement.
+
 ## 0.1.0 — 2026-09-10
 
 Initial local application:

@@ -31,3 +31,7 @@
 4. Draw with a pointer/pen when enabled; retain strokes across zoom and reload.
 5. Install the PWA and reopen downloaded papers offline; queue annotation changes until online.
 6. Explicitly document real-iPad testing and extraction coverage limits.
+
+## Reader interaction refinements
+
+Use a compact Zotero-inspired toolbar and annotation sidebar. Editors and citation/figure previews open beside their source without a backdrop or blur. Support Fit width, Fit page, Actual size, and custom zoom (25–400%), with Cmd/Ctrl +/− and Cmd/Ctrl+0. Fit modes update when the reading viewport changes.

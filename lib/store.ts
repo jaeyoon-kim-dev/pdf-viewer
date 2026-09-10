@@ -1,4 +1,5 @@
 'use client';
+import { createId } from './id.ts';
 import { useEffect, useState } from 'react';
 import {
   EMPTY_LIBRARY,
@@ -144,7 +145,7 @@ export async function saveRecord(
     kind,
     value: { ...value, revision: previous?.value.revision ?? value.revision },
     deleted,
-    nonce: crypto.randomUUID(),
+    nonce: createId(),
   };
   await transaction('pending', 'readwrite', (s) => s.put(op));
   snapshot = overlay(snapshot, [op]);
@@ -246,7 +247,7 @@ export async function resolvePending(key: string, keepLocal: boolean) {
         ...op,
         value: { ...op.value, revision: record?.revision ?? revision },
         error: undefined,
-        nonce: crypto.randomUUID(),
+        nonce: createId(),
       }),
     );
   } else await transaction('pending', 'readwrite', (s) => s.delete(key));

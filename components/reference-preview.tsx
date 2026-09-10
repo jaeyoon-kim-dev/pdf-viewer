@@ -1,4 +1,5 @@
 'use client';
+import { createId } from '@/lib/id';
 import { useEffect, useState } from 'react';
 import type { PDFDocumentProxy, RenderTask } from 'pdfjs-dist';
 import {
@@ -7,12 +8,9 @@ import {
   ChevronLeft,
   ChevronRight,
 } from 'lucide-react';
-import {
-  Dialog,
-  DialogContent,
-  DialogTitle,
-  DialogDescription,
-} from '@/components/ui/dialog';
+import { PopoverTitle, PopoverDescription } from '@/components/ui/popover';
+import ReaderPopover from './reader-popover';
+import type { ReaderAnchor } from '@/lib/popover-anchor';
 import { Switch } from '@/components/ui/switch';
 import type { Reference } from '@/lib/references';
 import { safeUrl, type Article, type Reading } from '@/lib/model';
@@ -24,12 +22,14 @@ export default function ReferencePreview({
   paperId,
   sourcePage,
   onClose,
+  anchor,
 }: {
   references: Reference[];
   doc: PDFDocumentProxy;
   paperId: string;
   sourcePage: number;
   onClose: () => void;
+  anchor?: ReaderAnchor;
 }) {
   const { data, save } = useLibrary();
   const [index, setIndex] = useState(0);
@@ -109,7 +109,7 @@ export default function ReferencePreview({
       if (!checked && saved) await save('readings', saved, true);
       else if (checked && !saved) {
         const reading: Reading = {
-          id: crypto.randomUUID(),
+          id: createId(),
           paperId,
           page: sourcePage,
           reference: reference.text,
@@ -127,166 +127,161 @@ export default function ReferencePreview({
     }
   }
   return (
-    <Dialog
-      open
-      onOpenChange={(open) => {
-        if (!open) onClose();
-      }}
+    <ReaderPopover
+      anchor={anchor}
+      onClose={onClose}
+      className="reference-preview-popover"
     >
-      <DialogContent className="reference-dialog">
-        <div className="eyebrow">
-          {reference.kind === 'citation'
-            ? 'REFERENCE PREVIEW'
-            : 'FIGURE & TABLE PREVIEW'}
+      <div className="eyebrow">
+        {reference.kind === 'citation'
+          ? 'REFERENCE PREVIEW'
+          : 'FIGURE & TABLE PREVIEW'}
+      </div>
+      <PopoverTitle>
+        {reference.kind === 'citation'
+          ? article?.title || reference.label
+          : reference.label}
+      </PopoverTitle>
+      <PopoverDescription>
+        {reference.kind === 'citation'
+          ? [article?.authors, article?.year].filter(Boolean).join(' · ') ||
+            'Bibliographic information'
+          : `Linked page ${reference.page}. Your reading position stays on page ${sourcePage}.`}
+      </PopoverDescription>
+      {references.length > 1 && (
+        <div className="button-row">
+          <button
+            className="icon-button"
+            disabled={index === 0}
+            aria-label="Previous reference"
+            onClick={() => setIndex((i) => i - 1)}
+          >
+            <ChevronLeft />
+          </button>
+          <span>
+            {index + 1} / {references.length}
+          </span>
+          <button
+            className="icon-button"
+            disabled={index === references.length - 1}
+            aria-label="Next reference"
+            onClick={() => setIndex((i) => i + 1)}
+          >
+            <ChevronRight />
+          </button>
         </div>
-        <DialogTitle>
+      )}
+      {loading && (
+        <output className="muted">
           {reference.kind === 'citation'
-            ? article?.title || reference.label
-            : reference.label}
-        </DialogTitle>
-        <DialogDescription>
-          {reference.kind === 'citation'
-            ? [article?.authors, article?.year].filter(Boolean).join(' · ') ||
-              'Bibliographic information'
-            : `Linked page ${reference.page}. Your reading position stays on page ${sourcePage}.`}
-        </DialogDescription>
-        {references.length > 1 && (
-          <div className="button-row">
-            <button
-              className="icon-button"
-              disabled={index === 0}
-              aria-label="Previous reference"
-              onClick={() => setIndex((i) => i - 1)}
-            >
-              <ChevronLeft />
-            </button>
-            <span>
-              {index + 1} / {references.length}
-            </span>
-            <button
-              className="icon-button"
-              disabled={index === references.length - 1}
-              aria-label="Next reference"
-              onClick={() => setIndex((i) => i + 1)}
-            >
-              <ChevronRight />
-            </button>
+            ? 'Looking up article information…'
+            : 'Rendering preview…'}
+        </output>
+      )}
+      {reference.kind === 'citation' ? (
+        <>
+          <div className="citation-body">
+            {article?.abstract ? (
+              <p>{article.abstract}</p>
+            ) : (
+              !loading && (
+                <p className="muted">
+                  No abstract is available from the metadata provider.
+                </p>
+              )
+            )}
+            {article?.match === 'candidate' && (
+              <p className="match-note">
+                Possible match from Crossref. Check the title against the
+                original reference below.
+              </p>
+            )}
+            {article?.match === 'unresolved' && !loading && (
+              <p className="match-note">
+                Could not identify this article reliably. You can still save the
+                original reference.
+              </p>
+            )}
+            <details>
+              <summary>Original reference</summary>
+              <p>{reference.text}</p>
+            </details>
           </div>
-        )}
-        {loading && (
-          <output className="muted">
-            {reference.kind === 'citation'
-              ? 'Looking up article information…'
-              : 'Rendering preview…'}
-          </output>
-        )}
-        {reference.kind === 'citation' ? (
-          <>
-            <div className="citation-body">
-              {article?.abstract ? (
-                <p>{article.abstract}</p>
-              ) : (
-                !loading && (
-                  <p className="muted">
-                    No abstract is available from the metadata provider.
-                  </p>
-                )
-              )}
-              {article?.match === 'candidate' && (
-                <p className="match-note">
-                  Possible match from Crossref. Check the title against the
-                  original reference below.
-                </p>
-              )}
-              {article?.match === 'unresolved' && !loading && (
-                <p className="match-note">
-                  Could not identify this article reliably. You can still save
-                  the original reference.
-                </p>
-              )}
-              <details>
-                <summary>Original reference</summary>
-                <p>{reference.text}</p>
-              </details>
-            </div>
-            <div className="button-row">
-              {safeUrl(article?.url) && (
-                <a
-                  className="secondary-button"
-                  href={safeUrl(article?.url)}
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  Article page
-                  <ArrowUpRight size={16} />
-                </a>
-              )}
-              {safeUrl(article?.pdf) && (
-                <a
-                  className="secondary-button"
-                  href={safeUrl(article?.pdf)}
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  PDF link
-                  <ArrowUpRight size={16} />
-                </a>
-              )}
-            </div>
-            <label className="read-later-toggle" htmlFor="read-later-switch">
-              <Bookmark size={20} />
-              <span>
-                <strong>Read later</strong>
-                <small>
-                  Keep this article and a link to where you found it.
-                </small>
-              </span>
-              <Switch
-                id="read-later-switch"
-                checked={!!saved}
-                disabled={busy}
-                onCheckedChange={toggle}
-              />
-            </label>
-            <p className="muted citation-attribution">
-              Article metadata: Crossref. Availability varies by publisher.
-            </p>
-          </>
-        ) : (
-          <>
-            <div className={`figure-preview ${fullPage ? 'full-page' : ''}`}>
-              {image && (
-                <img
-                  src={image}
-                  alt={`Page containing ${reference.label}`}
-                  style={
-                    fullPage
-                      ? undefined
-                      : {
-                          marginTop: `${-Math.max(0, reference.y - 0.45) * 100}%`,
-                        }
-                  }
-                />
-              )}
-            </div>
-            <p className="muted">{reference.text}</p>
-            <button
-              className="text-button"
-              onClick={() => setFullPage(!fullPage)}
-            >
-              {fullPage ? 'Show figure area' : 'Show entire linked page'}
-            </button>
-            <p className="muted">
-              The figure area is estimated from its caption or PDF destination.
-            </p>
-          </>
-        )}
-        {error && (
-          <p role="alert" className="error">
-            {error}
+          <div className="button-row">
+            {safeUrl(article?.url) && (
+              <a
+                className="secondary-button"
+                href={safeUrl(article?.url)}
+                target="_blank"
+                rel="noreferrer"
+              >
+                Article page
+                <ArrowUpRight size={16} />
+              </a>
+            )}
+            {safeUrl(article?.pdf) && (
+              <a
+                className="secondary-button"
+                href={safeUrl(article?.pdf)}
+                target="_blank"
+                rel="noreferrer"
+              >
+                PDF link
+                <ArrowUpRight size={16} />
+              </a>
+            )}
+          </div>
+          <label className="read-later-toggle" htmlFor="read-later-switch">
+            <Bookmark size={20} />
+            <span>
+              <strong>Read later</strong>
+              <small>Keep this article and a link to where you found it.</small>
+            </span>
+            <Switch
+              id="read-later-switch"
+              checked={!!saved}
+              disabled={busy}
+              onCheckedChange={toggle}
+            />
+          </label>
+          <p className="muted citation-attribution">
+            Article metadata: Crossref. Availability varies by publisher.
           </p>
-        )}
-      </DialogContent>
-    </Dialog>
+        </>
+      ) : (
+        <>
+          <div className={`figure-preview ${fullPage ? 'full-page' : ''}`}>
+            {image && (
+              <img
+                src={image}
+                alt={`Page containing ${reference.label}`}
+                style={
+                  fullPage
+                    ? undefined
+                    : {
+                        marginTop: `${-Math.max(0, reference.y - 0.45) * 100}%`,
+                      }
+                }
+              />
+            )}
+          </div>
+          <p className="muted">{reference.text}</p>
+          <button
+            className="text-button"
+            onClick={() => setFullPage(!fullPage)}
+          >
+            {fullPage ? 'Show figure area' : 'Show entire linked page'}
+          </button>
+          <p className="muted">
+            The figure area is estimated from its caption or PDF destination.
+          </p>
+        </>
+      )}
+      {error && (
+        <p role="alert" className="error">
+          {error}
+        </p>
+      )}
+    </ReaderPopover>
   );
 }

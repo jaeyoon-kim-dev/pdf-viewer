@@ -62,3 +62,9 @@ Drizzle generates numbered SQLite migration files. `scripts/migrate.mjs` applies
 Lint covers authored application code. Vendored UI primitives are excluded. React Compiler checks are disabled because the compiler is not enabled. Full HTML navigation is intentional for reliable offline document caching; in-memory page previews use canvas data URLs rather than optimized web images.
 
 A feature-detected WebMCP surface exposes page navigation and page-note creation using the same actions as the UI. Unsupported browsers simply omit it. This interface has not been validated in a real WebMCP browser context.
+
+## Reader popovers and sizing
+
+`reader-popover.tsx` composes Base UI non-modal popovers with virtual anchors derived from the source element or normalized PDF selection rectangle. Anchors follow scrolling and resizing; collision handling keeps controls inside the viewport. There is no backdrop, scroll lock, or forced initial textarea focus. Escape, outside interaction, and the close button dismiss the popover. Unsaved annotation edits require Save annotation before dismissal.
+
+`reader-view.ts` calculates width/height fitting with spread spacing and page-label allowance. Actual size maps PDF points to CSS pixels at 96/72. Custom zoom is clamped to 25–400%; fit modes can exceed those custom limits. The first page supplies document sizing, so mixed-size documents may not fit every page exactly. Keyboard zoom is intercepted only with Command/Control; ordinary typing remains available.

@@ -1319,3 +1319,21 @@ textarea::placeholder {
 .dark .wide-dialog .field-label {
   color: #d5deec;
 }
+
+/* Compact reading workspace and source-anchored editors. */
+.reader-header { min-height: 46px; padding: 6px 12px; gap: 10px; }
+.reader-brand { display: none; }
+.reader-toolbar { min-height: 44px; padding: 5px 12px; gap: 8px; }
+.reader-toolbar select { height: 30px; min-height: 30px; font-size: 12px; }
+.reader-sidebar { width: 300px; }
+.reader.theme-light { --reader-ui: #fafafa; --reader-border: #d5d5d5; }
+.theme-light .reader-scroll { background: #dedede; }
+.pdf-page { box-shadow: 0 1px 4px #0003; }
+.reader-popover-positioner { z-index: 50; }
+.reader-popover { position: relative; display: flex; flex-direction: column; gap: 12px; width: min(390px, calc(100vw - 24px)); max-height: min(650px, var(--available-height)); overflow: auto; padding: 16px; background: var(--popover); color: var(--popover-foreground); border: 1px solid var(--border); border-radius: 6px; box-shadow: 0 4px 18px #0003; font-size: 13px; outline: none; }
+.reference-preview-popover { width: min(480px, calc(100vw - 24px)); }
+.reader-popover [data-slot='popover-title'] { padding-right: 28px; font-size: 15px; }
+.reader-popover .selected-quote { max-height: 90px; overflow: auto; margin: 0; }
+.reader-popover textarea { min-height: 80px; }
+.popover-close { position: absolute; top: 8px; right: 8px; }
+.reader-popover .figure-preview { max-height: 320px; object-fit: contain; }

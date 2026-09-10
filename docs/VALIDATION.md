@@ -13,15 +13,15 @@ Run the checks documented in README. Integration fixtures never populate the rea
 
 - `npm run typecheck`: passed.
 - `npm run lint`: passed.
-- `npm test`: 14 tests passed, including a real three-page PDF fixture and IndexedDB outbox scenarios.
+- `npm test`: 17 tests passed, including a real three-page PDF fixture and IndexedDB outbox scenarios.
 - `npm run build`: passed with React 19.2.8, Vinext 1.0.0-beta.9, Vite 8.0.16, and PDF.js 6.3.289.
 - `CROSSREF_LIVE=1 npm run test:integration`: passed, including a live DOI lookup through Crossref and forwarded HTTPS-origin handling.
-- `docker compose up -d --build --wait`: passed; container healthy and bound to `127.0.0.1:3080`.
+- `docker compose up -d --build --wait`: passed; container healthy and bound to the private Tailscale interface at `100.111.111.100:3080`.
 - `GET /api/health`: returned `{"status":"ok"}` from the running container.
 - `npm audit --omit=dev`: no reported production dependency vulnerabilities.
 - Full development audit: four moderate findings remain in Drizzle Kit's old esbuild loader chain. The automated suggested fix would downgrade Drizzle Kit to an incompatible older version, so it was not applied. This loader is used for schema tooling, not the app's request handlers; the current Docker image also retains build dependencies. Production packages with known high advisories were updated.
 
-No cloud deployment was performed. No reverse proxy or network configuration was changed.
+No cloud deployment was performed. Docker now binds to the private Tailscale interface; HTTPS Serve remains disabled in the tailnet account.
 
 ## Validation still required
 
@@ -36,7 +36,7 @@ Manual acceptance sequence:
 3. Add Ideas or Limitations; add paper-level tags separately and filter the library.
 4. Tap linked/unlinked citations and figures; verify the popup content and unchanged main reading position.
 5. Toggle Read later and inspect its source links from the library.
-6. Try all four layouts and themes, zoom, and page/text navigation.
+6. Try all four layouts and themes, Fit width, Fit page, Actual size, Cmd/Ctrl +/−/0, and page/text navigation. Resize the viewport and toggle the sidebar while fitted. Check source anchoring, outside/Escape dismissal, and note saving in the non-modal popovers.
 7. On iPad, verify vertical swipes over text scroll, horizontal text drags select, pen strokes persist, and the system callout does not interrupt annotation.
 8. Install the production PWA over HTTPS, download a paper, reopen it offline, make edits, reconnect, and inspect sync status.
 9. Edit one annotation on two devices while one is offline; verify the conflict is retained and explicitly resolved.

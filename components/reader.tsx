@@ -1,4 +1,12 @@
 'use client';
+import {
+  fittedWidth,
+  clampZoom,
+  zoomShortcut,
+  type FitMode,
+} from '@/lib/reader-view';
+import { elementAnchor, type ReaderAnchor } from '@/lib/popover-anchor';
+import { createId } from '@/lib/id';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { PDFDocumentProxy } from 'pdfjs-dist';
 import {
@@ -44,6 +52,10 @@ export default function Reader({ paperId }: { paperId: string }) {
   const [message, setMessage] = useState('');
   const [page, setPage] = useState(1);
   const [zoom, setZoom] = useState(100);
+  const [fitMode, setFitMode] = useState<FitMode>('width');
+  const [height, setHeight] = useState(800);
+  const [baseWidth, setBaseWidth] = useState(816);
+  const [editingAnchor, setEditingAnchor] = useState<ReaderAnchor>();
   const [layout, setLayout] = useState<Layout>('continuous');
   const [theme, setTheme] = useState('light');
   const [pen, setPen] = useState(false);
@@ -55,6 +67,7 @@ export default function Reader({ paperId }: { paperId: string }) {
   const [preview, setPreview] = useState<{
     refs: Reference[];
     source: number;
+    anchor?: ReaderAnchor;
   }>();
   const [details, setDetails] = useState(false);
   const [references, setReferences] = useState<Reference[]>([]);
@@ -84,8 +97,9 @@ export default function Reader({ paperId }: { paperId: string }) {
         setLayout(prefs.layout);
       if (['light', 'dark', 'sepia'].includes(prefs.theme))
         setTheme(prefs.theme);
-      if (typeof prefs.zoom === 'number')
-        setZoom(Math.max(50, Math.min(200, prefs.zoom)));
+      if (typeof prefs.zoom === 'number') setZoom(clampZoom(prefs.zoom));
+      if (['width', 'page', 'custom'].includes(prefs.fitMode))
+        setFitMode(prefs.fitMode);
     } catch {}
   }, []);
   useEffect(() => {
@@ -96,10 +110,10 @@ export default function Reader({ paperId }: { paperId: string }) {
     try {
       localStorage.setItem(
         'paperthread-view',
-        JSON.stringify({ layout, theme, zoom }),
+        JSON.stringify({ layout, theme, zoom, fitMode }),
       );
     } catch {}
-  }, [layout, theme, zoom]);
+  }, [layout, theme, zoom, fitMode]);
   useEffect(() => {
     let cancelled = false;
     let document: PDFDocumentProxy | undefined;
@@ -120,6 +134,7 @@ export default function Reader({ paperId }: { paperId: string }) {
         const viewport = (await document.getPage(1)).getViewport({ scale: 1 });
         if (cancelled) return;
         setAspect(viewport.height / viewport.width);
+        setBaseWidth((viewport.width * 96) / 72);
         setDoc(document);
         setPage((p) => Math.min(p, document!.numPages));
       })
@@ -161,9 +176,10 @@ export default function Reader({ paperId }: { paperId: string }) {
   }, [doc]);
   useEffect(() => {
     if (!scroller.current) return;
-    const resize = new ResizeObserver((entries) =>
-      setWidth(entries[0].contentRect.width),
-    );
+    const resize = new ResizeObserver((entries) => {
+      setWidth(entries[0].contentRect.width);
+      setHeight(entries[0].contentRect.height);
+    });
     resize.observe(scroller.current);
     return () => resize.disconnect();
   }, [doc, sidebar]);
@@ -202,8 +218,26 @@ export default function Reader({ paperId }: { paperId: string }) {
     );
     return () => clearTimeout(timer);
   }, [doc, goto]);
+  const fits = fittedWidth(width, height, aspect, layout === 'two');
+  const pageWidth =
+    fitMode === 'custom' ? (baseWidth * zoom) / 100 : fits[fitMode];
+  const effectiveZoom = (pageWidth / baseWidth) * 100;
+  const manualZoom = useCallback((value: number) => {
+    setFitMode('custom');
+    setZoom(clampZoom(value));
+  }, []);
   useEffect(() => {
     const key = (e: KeyboardEvent) => {
+      const action = zoomShortcut(e);
+      if (action) {
+        e.preventDefault();
+        manualZoom(
+          action === 'reset'
+            ? 100
+            : effectiveZoom + (action === 'in' ? 10 : -10),
+        );
+        return;
+      }
       if (
         (e.target as HTMLElement).closest(
           'input,textarea,select,[role="dialog"]',
@@ -223,11 +257,13 @@ export default function Reader({ paperId }: { paperId: string }) {
     };
     window.addEventListener('keydown', key);
     return () => window.removeEventListener('keydown', key);
-  }, [goto, layout, editing, preview]);
+  }, [goto, layout, editing, preview, effectiveZoom, manualZoom]);
   const create = useCallback(
-    (value: Partial<Annotation> & { page: number }) => {
+    (value: Partial<Annotation> & { page: number }, anchor?: ReaderAnchor) => {
+      setEditingAnchor(anchor);
+      setPreview(undefined);
       const a: Annotation = {
-        id: crypto.randomUUID(),
+        id: createId(),
         paperId,
         kind: 'highlight',
         quote: '',
@@ -263,7 +299,7 @@ export default function Reader({ paperId }: { paperId: string }) {
         navigate: (n) => goto(n),
         addNote: async (n, note) => {
           const a: Annotation = {
-            id: crypto.randomUUID(),
+            id: createId(),
             paperId,
             page: n,
             kind: 'note',
@@ -357,16 +393,6 @@ export default function Reader({ paperId }: { paperId: string }) {
       setError(`Could not finish the offline download: ${String(e)}`);
     }
   }
-  const pageWidth =
-    (Math.max(
-      220,
-      Math.min(
-        920,
-        (width - (layout === 'two' ? 64 : 48)) / (layout === 'two' ? 2 : 1),
-      ),
-    ) *
-      zoom) /
-    100;
   const visiblePages = doc
     ? layout === 'single'
       ? [page]
@@ -483,27 +509,43 @@ export default function Reader({ paperId }: { paperId: string }) {
           <NativeSelectOption value="single">Single page</NativeSelectOption>
           <NativeSelectOption value="two">Two pages</NativeSelectOption>
         </NativeSelect>
+        <NativeSelect
+          aria-label="Page zoom"
+          value={fitMode === 'custom' && zoom === 100 ? 'actual' : fitMode}
+          onChange={(e) => {
+            if (e.target.value === 'actual') manualZoom(100);
+            else if (e.target.value !== 'custom')
+              setFitMode(e.target.value as FitMode);
+          }}
+        >
+          <NativeSelectOption value="width">Fit width</NativeSelectOption>
+          <NativeSelectOption value="page">Fit page</NativeSelectOption>
+          <NativeSelectOption value="actual">Actual size</NativeSelectOption>
+          {fitMode === 'custom' && zoom !== 100 && (
+            <NativeSelectOption value="custom">Custom zoom</NativeSelectOption>
+          )}
+        </NativeSelect>
         <div className="button-row zoom-controls">
           <button
             className="icon-button"
             aria-label="Zoom out"
-            disabled={zoom <= 50}
-            onClick={() => setZoom((z) => Math.max(50, z - 10))}
+            disabled={effectiveZoom <= 25}
+            onClick={() => manualZoom(effectiveZoom - 10)}
           >
             <Minus size={16} />
           </button>
           <button
             className="zoom-value"
-            title="Fit width"
-            onClick={() => setZoom(100)}
+            title="Actual size (⌘/Ctrl+0)"
+            onClick={() => manualZoom(100)}
           >
-            {Math.round(zoom)}%
+            {Math.round(effectiveZoom)}%
           </button>
           <button
             className="icon-button"
             aria-label="Zoom in"
-            disabled={zoom >= 200}
-            onClick={() => setZoom((z) => Math.min(200, z + 10))}
+            disabled={effectiveZoom >= 400}
+            onClick={() => manualZoom(effectiveZoom + 10)}
           >
             <Plus size={16} />
           </button>
@@ -601,14 +643,19 @@ export default function Reader({ paperId }: { paperId: string }) {
                 selected={selected}
                 layout={layout}
                 onSelect={create}
-                onEdit={setEditing}
-                onPreview={(refs) => setPreview({ refs, source: n })}
+                onEdit={(a, anchor) => {
+                  setEditingAnchor(anchor);
+                  setEditing(a);
+                  setPreview(undefined);
+                }}
+                onPreview={(refs, anchor) => {
+                  setPreview({ refs, source: n, anchor });
+                  setEditing(undefined);
+                }}
                 onPage={(delta) =>
                   goto(currentPage.current + delta * (layout === 'two' ? 2 : 1))
                 }
-                onZoom={(ratio) =>
-                  setZoom((z) => Math.max(50, Math.min(200, z * ratio)))
-                }
+                onZoom={(ratio) => manualZoom(effectiveZoom * ratio)}
               />
             ))}
             {!doc && (
@@ -692,7 +739,10 @@ export default function Reader({ paperId }: { paperId: string }) {
                       </div>
                       <button
                         className="text-button"
-                        onClick={() => setEditing(a)}
+                        onClick={(e) => {
+                          setEditingAnchor(elementAnchor(e.currentTarget));
+                          setEditing(a);
+                        }}
                       >
                         Edit note & collections
                       </button>
@@ -726,7 +776,13 @@ export default function Reader({ paperId }: { paperId: string }) {
                     <button
                       className="reference-list-item"
                       key={r.id}
-                      onClick={() => setPreview({ refs: [r], source: page })}
+                      onClick={(e) =>
+                        setPreview({
+                          refs: [r],
+                          source: page,
+                          anchor: elementAnchor(e.currentTarget),
+                        })
+                      }
                     >
                       <span className="tag">{r.label}</span>
                       <p>{r.text}</p>
@@ -786,6 +842,7 @@ export default function Reader({ paperId }: { paperId: string }) {
         <AnnotationEditor
           key={editing.id}
           annotation={editing}
+          anchor={editingAnchor}
           onClose={() => setEditing(undefined)}
         />
       )}{' '}
@@ -795,6 +852,7 @@ export default function Reader({ paperId }: { paperId: string }) {
           doc={doc}
           paperId={paperId}
           sourcePage={preview.source}
+          anchor={preview.anchor}
           references={preview.refs}
           onClose={() => setPreview(undefined)}
         />

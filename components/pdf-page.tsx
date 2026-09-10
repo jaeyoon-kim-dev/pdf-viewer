@@ -1,4 +1,9 @@
 'use client';
+import {
+  elementAnchor,
+  rectAnchor,
+  type ReaderAnchor,
+} from '@/lib/popover-anchor';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { PDFDocumentProxy, RenderTask } from 'pdfjs-dist';
 import type { Annotation, Point } from '@/lib/model';
@@ -26,9 +31,12 @@ type Props = {
   pen: boolean;
   selected?: string;
   layout: string;
-  onSelect: (value: Partial<Annotation> & { page: number }) => void;
-  onEdit: (a: Annotation) => void;
-  onPreview: (r: Reference[]) => void;
+  onSelect: (
+    value: Partial<Annotation> & { page: number },
+    anchor?: ReaderAnchor,
+  ) => void;
+  onEdit: (a: Annotation, anchor?: ReaderAnchor) => void;
+  onPreview: (r: Reference[], anchor?: ReaderAnchor) => void;
   onPage: (delta: number) => void;
   onZoom: (ratio: number) => void;
 };
@@ -325,12 +333,22 @@ export default function PdfPage(props: Props) {
           points: g.points,
           color: '#60a5fa',
         });
-      else if (g.kind === 'select' && text)
-        props.onSelect({
-          page: number,
-          ...selectWords(text.words, g.word, g.end),
-        });
-      else if (!g.moved && g.annotation) props.onEdit(g.annotation);
+      else if (g.kind === 'select' && text) {
+        const selection = selectWords(text.words, g.word, g.end);
+        const rect = selection.rects.at(-1);
+        props.onSelect(
+          { page: number, ...selection },
+          rect && wrapper.current
+            ? rectAnchor(wrapper.current, rect)
+            : undefined,
+        );
+      } else if (!g.moved && g.annotation)
+        props.onEdit(
+          g.annotation,
+          wrapper.current && g.annotation.rects[0]
+            ? rectAnchor(wrapper.current, g.annotation.rects[0])
+            : undefined,
+        );
       else if (
         g.kind === 'scroll' &&
         ['single', 'two'].includes(layout) &&
@@ -453,7 +471,9 @@ export default function PdfPage(props: Props) {
               width: `${spot.w * 100}%`,
               height: `${spot.h * 100}%`,
             }}
-            onClick={() => props.onPreview(spot.references)}
+            onClick={(e) =>
+              props.onPreview(spot.references, elementAnchor(e.currentTarget))
+            }
           />
         ))}
         <div className="sr-only">

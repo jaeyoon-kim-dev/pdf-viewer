@@ -1,4 +1,5 @@
 'use client';
+import { createId } from '@/lib/id';
 import { useState } from 'react';
 import { Plus } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -43,7 +44,7 @@ export function AddType({ onCreated }: { onCreated?: (id: string) => void }) {
                 return;
               }
               try {
-                const id = crypto.randomUUID();
+                const id = createId();
                 await save('types', { id, name: clean, color, revision: 0 });
                 setOpen(false);
                 setName('');

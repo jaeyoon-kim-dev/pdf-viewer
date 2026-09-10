@@ -21,6 +21,18 @@ docker compose up -d --build
 
 Migrations run before the server starts. Back up before updating. Keep applied files in `drizzle/` unchanged; add a migration for schema changes.
 
+## Access on this server
+
+The running instance is reachable at `http://100.111.111.100:3080` from devices connected to the same Tailscale network. The local `.env` sets `PAPERTHREAD_BIND_HOST` to this server's Tailscale IP. The public network interface is not bound. This deployment can be reached by tailnet members allowed by the network ACL; the app itself has one shared library.
+
+Tailscale Serve is currently disabled for this tailnet, so HTTPS provisioning has not completed. Once enabled in the Tailscale account, run:
+
+```sh
+tailscale serve --bg --https=8443 http://127.0.0.1:3080
+```
+
+Before that command, restore `PAPERTHREAD_BIND_HOST=127.0.0.1` in `.env`, retain `VINEXT_TRUSTED_HOSTS=mini.tail0293c.ts.net:8443`, and run `docker compose up -d --wait`. The intended HTTPS URL is `https://mini.tail0293c.ts.net:8443`. Do not treat it as live until verified. Plain HTTP supports online reading but does not enable the installed/offline PWA on an iPad.
+
 ## iPad and HTTPS
 
 Service workers and offline PWA capabilities require a secure origin. `http://localhost` works on the same machine, but plain HTTP to the Linux server's LAN IP does not qualify on an iPad.
