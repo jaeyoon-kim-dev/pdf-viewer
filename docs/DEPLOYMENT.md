@@ -103,3 +103,5 @@ There are no app hosting fees or Cloudflare dependencies when run on your server
 Reading positions are included in SQLite backups. Startup applies migration 0002 for the reading_positions table automatically. Tooltip preferences remain browser-local and are not included in database backups. This build packages the PDF.js legacy worker alongside the legacy library for Safari 18+ compatibility.
 
 After updating browser compatibility code, reload open reader tabs to load the new client bundle and legacy worker.
+
+The Safari 26.0.1 extraction fix is a client update, with no migration or PDF changes. Reload the reader after deployment to replace the failing in-memory text extraction code.

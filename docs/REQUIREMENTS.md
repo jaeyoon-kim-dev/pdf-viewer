@@ -57,3 +57,5 @@ Prefer dense reading UI with minimal redundant borders and padding, particularly
 - Target Safari 18+ with the PDF.js compatibility build; verify real iPad behavior separately.
 
 - Highlight fills must retain glyph contrast in light, dark and sepia views and in sidebar thumbnails.
+
+- Safari 26.0.1 selection and citation detection must work without ReadableStream async iteration; use explicit stream reads.

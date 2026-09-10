@@ -23,6 +23,32 @@ export async function loadPdf(data: Uint8Array) {
     wasmUrl: '/pdfjs/wasm/',
   }).promise;
 }
+type TextContent = Awaited<ReturnType<PDFPageProxy['getTextContent']>>;
+// PDF.js 6 getTextContent uses ReadableStream async iteration, which Safari
+// before 26.4 does not provide, even with PDF.js's legacy JavaScript build.
+export async function readPageText(page: PDFPageProxy): Promise<TextContent> {
+  if (page.isPureXfa) return page.getTextContent();
+  const reader = (
+    page.streamTextContent() as ReadableStream<TextContent>
+  ).getReader();
+  const content: TextContent = {
+    items: [],
+    styles: Object.create(null),
+    lang: null,
+  };
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      content.lang ??= value.lang;
+      Object.assign(content.styles, value.styles);
+      content.items.push(...value.items);
+    }
+    return content;
+  } finally {
+    reader.releaseLock();
+  }
+}
 const cache = new WeakMap<PDFDocumentProxy, Map<number, Promise<PageText>>>();
 export function pageText(doc: PDFDocumentProxy, n: number): Promise<PageText> {
   let pages = cache.get(doc);
@@ -41,7 +67,7 @@ async function extractPage(
   const page = await doc.getPage(n);
   const viewport = page.getViewport({ scale: 1 });
   const pdf = await pdfLibrary();
-  const content = await page.getTextContent();
+  const content = await readPageText(page);
   const canvas = document.createElement('canvas');
   const ctx = canvas.getContext('2d')!;
   const words: Word[] = [];

@@ -82,3 +82,8 @@ Initial local application:
 
 - Separate highlight fills from other annotations and blend them with the PDF to preserve glyph contrast, including page thumbnails and dark mode.
 - Prevent native canvas dragging and tolerate pointer capture failures. Surface text extraction errors on already-rendered pages to diagnose unavailable selection/citations.
+
+## Safari 26.0.1 text extraction — 2026-09-10
+
+- Replaced PDF.js stream async iteration with explicit reader.read() consumption for text extraction. The legacy build alone did not cover this missing Safari API.
+- Regression test disables ReadableStream async iteration, reproduces the upstream TypeError, then verifies text selection hit testing and citation hotspots from a real PDF through the replacement.

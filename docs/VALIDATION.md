@@ -81,3 +81,7 @@ Compact-layout changes passed typecheck/lint and production Docker build. Manual
 - Database backed up before migration; Docker rebuilt and healthy. Manually verify resume at page offsets, bare URLs, source jumps, tooltip preferences, quote separation and the screenshot-based preview layout.
 
 Highlight/Safari interaction follow-up: typecheck, lint, all 31 tests and production build passed. Dedicated highlight blending covers main pages and thumbnails; manually verify light/dark/sepia contrast, mouse text drag and reference clicks on Mac Safari after reloading. Missing text extraction is now shown on rendered pages. Pointer capture failure handling is defensive; a separate Safari interaction root cause has not been confirmed.
+
+## Safari stream-iteration regression — 2026-09-10
+
+All 32 unit tests, typecheck, lint and production build passed. The regression test removes ReadableStream.prototype[Symbol.asyncIterator], reproduces PDF.js getTextContent() TypeError, and verifies the replacement extracts words, resolves a selection and generates citation hotspots from the three-page fixture. This directly covers the API missing in the reported Mac Safari 26.0.1 failure; actual Safari pointer/preview interaction verification remains outstanding.

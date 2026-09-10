@@ -78,6 +78,6 @@ Reader panels and popovers use compact spacing: annotations are separated rows, 
 
 Annotation tooltips remember color, style and Question/Phrase choices in browser local storage. Quoted source text retains a left quote bar separate from your notes. Citation cards use grouped navigation, a fading abstract and rounded access buttons.
 
-Safari 18+ is the compatibility target using PDF.js’s legacy build; real Safari/iPad verification remains outstanding. Offline PWA features on the private server need HTTPS.
+Safari 18+ is the compatibility target using PDF.js’s legacy build and explicit text stream reads (including Safari 26.0.1); real Safari/iPad verification remains outstanding. Offline PWA features on the private server need HTTPS.
 
 Highlights blend with page text to preserve contrast, including thumbnail previews; dark pages use screen blending.
