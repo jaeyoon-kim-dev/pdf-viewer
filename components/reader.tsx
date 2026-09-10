@@ -3,12 +3,19 @@ import {
   fittedWidth,
   clampZoom,
   zoomShortcut,
+  wheelZoomFactor,
   type FitMode,
 } from '@/lib/reader-view';
 import { elementAnchor, type ReaderAnchor } from '@/lib/popover-anchor';
 import { copyText } from '@/lib/clipboard';
 import { createId } from '@/lib/id';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from 'react';
 import type { PDFDocumentProxy } from 'pdfjs-dist';
 import {
   BookOpen,
@@ -256,6 +263,82 @@ export default function Reader({ paperId }: { paperId: string }) {
     setFitMode('custom');
     setZoom(clampZoom(value));
   }, []);
+  const wheelZoom = useRef(effectiveZoom);
+  const wheelAnchor = useRef<
+    | {
+        element: Element;
+        x: number;
+        y: number;
+        clientX: number;
+        clientY: number;
+      }
+    | undefined
+  >(undefined);
+  useLayoutEffect(() => {
+    wheelZoom.current = effectiveZoom;
+    const anchor = wheelAnchor.current;
+    wheelAnchor.current = undefined;
+    if (anchor?.element.isConnected && scroller.current) {
+      const rect = anchor.element.getBoundingClientRect();
+      scroller.current.scrollBy({
+        left: rect.left + rect.width * anchor.x - anchor.clientX,
+        top: rect.top + rect.height * anchor.y - anchor.clientY,
+        behavior: 'instant',
+      });
+    }
+  }, [effectiveZoom, fitMode]);
+  useEffect(() => {
+    const element = scroller.current;
+    if (!element) return;
+    const wheel = (event: WheelEvent) => {
+      if (
+        !(event.metaKey || event.ctrlKey) ||
+        event.altKey ||
+        !doc ||
+        event.deltaY === 0
+      )
+        return;
+      event.preventDefault();
+      const pageElement =
+        (event.target instanceof Element
+          ? event.target.closest('.pdf-page')
+          : null) ||
+        document
+          .getElementById(`page-${currentPage.current}`)
+          ?.querySelector('.pdf-page');
+      const rect = pageElement?.getBoundingClientRect();
+      const current =
+        fitMode !== 'custom' && rect
+          ? (rect.width / baseWidth) * 100
+          : wheelZoom.current;
+      const next = clampZoom(
+        current *
+          wheelZoomFactor(event.deltaY, event.deltaMode, element.clientHeight),
+      );
+      if (next === current && fitMode === 'custom') return;
+      if (pageElement && rect) {
+        const x = Math.max(
+          0,
+          Math.min(1, (event.clientX - rect.left) / rect.width),
+        );
+        const y = Math.max(
+          0,
+          Math.min(1, (event.clientY - rect.top) / rect.height),
+        );
+        wheelAnchor.current = {
+          element: pageElement,
+          x,
+          y,
+          clientX: rect.left + rect.width * x,
+          clientY: rect.top + rect.height * y,
+        };
+      }
+      wheelZoom.current = next;
+      manualZoom(next);
+    };
+    element.addEventListener('wheel', wheel, { passive: false });
+    return () => element.removeEventListener('wheel', wheel);
+  }, [doc, fitMode, baseWidth, manualZoom]);
   const historyState = annotationHistory(paperId);
   const replay = useCallback(
     async (redo = false) => {
@@ -671,7 +754,10 @@ export default function Reader({ paperId }: { paperId: string }) {
             <NativeSelectOption value="custom">Custom zoom</NativeSelectOption>
           )}
         </NativeSelect>
-        <div className="button-row zoom-controls">
+        <div
+          className="button-row zoom-controls"
+          title="Zoom: ⌘/Ctrl + scroll over the PDF"
+        >
           <button
             className="icon-button"
             aria-label="Zoom out"

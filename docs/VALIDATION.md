@@ -13,7 +13,7 @@ Run the checks documented in README. Integration fixtures never populate the rea
 
 - `npm run typecheck`: passed.
 - `npm run lint`: passed.
-- `npm test`: 28 tests passed, including a real three-page PDF fixture and IndexedDB outbox scenarios.
+- `npm test`: 28 tests passed in the recorded full run; the subsequent wheel-zoom change also passed its focused three-test reader-view suite, including a real three-page PDF fixture and IndexedDB outbox scenarios.
 - `npm run build`: passed with React 19.2.8, Vinext 1.0.0-beta.9, Vite 8.0.16, and PDF.js 6.3.289.
 - `CROSSREF_LIVE=1 npm run test:integration`: passed, including a live DOI lookup through Crossref and forwarded HTTPS-origin handling.
 - `docker compose up -d --build --wait`: passed; container healthy and bound to the private Tailscale interface at `100.111.111.100:3080`.
@@ -68,3 +68,5 @@ Final manual acceptance additions: verify palette-left/style-right tooltip layou
 Clipboard tests cover exact text, modern clipboard success, private HTTP fallback, denied permissions, and explicit failure reporting. Manually test Cmd/Ctrl+C and the Copy button on the private HTTP URL and Safari/iPad, and verify native note-field copying still works. Check Pages thumbnails after highlight, underline, handwriting, sticky memo, delete and undo. Browser verification remains outstanding.
 
 Select-control follow-up: inspect all toolbar, library and citation-format dropdowns for clipped descenders; native selects now use a 20px line-height with 4px vertical padding. Verify three visible annotation-style buttons beside the palette, including wrapping on narrow screens. Typecheck, lint and production build are the checks for this UI-only change; browser validation remains outstanding.
+
+Wheel-zoom unit checks cover direction, zero delta, pixel/line/page normalization, bounded wheel increments and zoom limits. Manually check Cmd/Ctrl+wheel over the PDF, trackpad scrolling, pointer anchoring near page edges, transitions from fit modes, and normal scrolling without modifiers. Browser interaction validation remains outstanding.

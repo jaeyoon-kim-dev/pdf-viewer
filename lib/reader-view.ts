@@ -30,3 +30,13 @@ export function zoomShortcut(e: {
   if (e.key === '0') return 'reset';
   return null;
 }
+
+export function wheelZoomFactor(
+  deltaY: number,
+  deltaMode: number,
+  viewportHeight: number,
+) {
+  const pixels =
+    deltaY * (deltaMode === 1 ? 16 : deltaMode === 2 ? viewportHeight : 1);
+  return Math.exp(-Math.max(-300, Math.min(300, pixels)) * 0.002);
+}

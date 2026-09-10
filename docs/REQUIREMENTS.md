@@ -47,3 +47,5 @@ Page numbers must not become citation hotspots. Internal links need citation/fig
 Selection tooltip layout: color palette on the left, Highlight/Underline/Note buttons on the right, Question/Phrase toggles below, explicit Save. Provide a top-level Continuous/Page toggle and a hideable left sidebar with Contents and Pages. Fit page must maximize page height inside the reader instead of shrinking to available width.
 
 Custom PDF selections must support Cmd/Ctrl+C and a visible Copy action without native text selection or the iPad selection callout. Pages-sidebar previews must include saved annotations and reflect edit/delete/undo updates.
+
+Support Cmd/Ctrl+scroll over the PDF for zoom, preserving the point under the pointer and leaving unmodified scrolling available.

@@ -60,3 +60,7 @@ Initial local application:
 
 - Replaced the selection tooltip style dropdown with Highlight, Underline and Note buttons.
 - Corrected shared select padding and line-height to fit compact toolbar heights without cropping text.
+
+## Modifier-scroll zoom — 2026-09-10
+
+- Added Cmd/Ctrl+scroll to zoom the PDF around the pointer, with normalized wheel deltas and 25–400% bounds.
