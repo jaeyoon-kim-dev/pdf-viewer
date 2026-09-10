@@ -344,6 +344,13 @@ select {
   color: #1e293b;
   font-size: 14px;
 }
+/* Selects need enough content height even in the compact reader toolbar. */
+select {
+  box-sizing: border-box;
+  min-height: 32px;
+  padding: 4px 32px 4px 10px;
+  line-height: 20px;
+}
 textarea {
   resize: vertical;
   min-height: 90px;
@@ -1418,3 +1425,8 @@ textarea::placeholder {
 .thumbnail-annotations { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
 .thumbnail-count { font-size: 10px; color: var(--reader-muted); }
 .selection-footer .text-button { display: inline-flex; align-items: center; gap: 4px; }
+
+.selection-tooltip { width: min(480px, calc(100vw - 24px)); }
+.selection-palette-row { flex-wrap: wrap; }
+.selection-style-buttons { min-height: 34px; height: auto !important; flex-shrink: 0; }
+.selection-style-buttons [data-slot='tabs-trigger'] { min-height: 28px; line-height: 20px; padding: 4px 7px; gap: 4px; font-size: 12px; }

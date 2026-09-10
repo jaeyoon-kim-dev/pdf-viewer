@@ -12,10 +12,6 @@ import {
 import { PopoverTitle, PopoverDescription } from '@/components/ui/popover';
 import ReaderPopover from './reader-popover';
 import type { ReaderAnchor } from '@/lib/popover-anchor';
-import {
-  NativeSelect,
-  NativeSelectOption,
-} from '@/components/ui/native-select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
@@ -96,17 +92,30 @@ export default function AnnotationEditor({
               ),
             )}
           </div>
-          <NativeSelect
-            aria-label="Annotation style"
+          <Tabs
             value={draft.kind}
-            onChange={(e) =>
-              setDraft({ ...draft, kind: e.target.value as Annotation['kind'] })
+            onValueChange={(kind) =>
+              setDraft({ ...draft, kind: kind as Annotation['kind'] })
             }
           >
-            <NativeSelectOption value="highlight">Highlight</NativeSelectOption>
-            <NativeSelectOption value="underline">Underline</NativeSelectOption>
-            <NativeSelectOption value="note">Note</NativeSelectOption>
-          </NativeSelect>
+            <TabsList
+              className="selection-style-buttons"
+              aria-label="Annotation style"
+            >
+              <TabsTrigger value="highlight">
+                <Highlighter size={15} />
+                Highlight
+              </TabsTrigger>
+              <TabsTrigger value="underline">
+                <Underline size={15} />
+                Underline
+              </TabsTrigger>
+              <TabsTrigger value="note">
+                <StickyNote size={15} />
+                Note
+              </TabsTrigger>
+            </TabsList>
+          </Tabs>
         </div>
         <div className="selection-collections">
           {(['question', 'phrase'] as const).map((type) => (

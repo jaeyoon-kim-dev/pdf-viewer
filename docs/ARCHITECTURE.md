@@ -71,7 +71,7 @@ A feature-detected WebMCP surface exposes page navigation and page-note creation
 
 The annotation toolbar wraps independently of viewing controls. Memo and Question create page-linked annotations through the same editor; Question presets the existing question collection. Pages with zero extracted words show an explanation instead of silently offering unavailable text selection.
 
-The selection toolbar anchors to the endpoint word, including reverse drags. Reader state retains an unsaved annotation overlay after pointer-up. Non-modal popovers ignore outside/focus dismissal until a subsequent pointer-down, preventing the opening gesture's trailing click from dismissing them. The selection tooltip provides a palette, a style selector, Question/Phrase toggles and explicit Save; More options expands the full editor.
+The selection toolbar anchors to the endpoint word, including reverse drags. Reader state retains an unsaved annotation overlay after pointer-up. Non-modal popovers ignore outside/focus dismissal until a subsequent pointer-down, preventing the opening gesture's trailing click from dismissing them. The selection tooltip provides a palette, style buttons, Question/Phrase toggles and explicit Save; More options expands the full editor.
 
 Sticky memos use existing note records with an empty quote and a normalized position rectangle; no schema migration is needed. Pin buttons open their editor. Placement is a one-shot action and does not change normal text annotation. Existing page-level notes remain supported.
 

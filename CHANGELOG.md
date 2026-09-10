@@ -55,3 +55,8 @@ Initial local application:
 
 - Added Cmd/Ctrl+C and Copy buttons for custom PDF selections, including a private-HTTP clipboard fallback.
 - Pages thumbnails now display saved highlights, underlines, ink and sticky-memo markers with live annotation counts.
+
+## Annotation buttons and select sizing — 2026-09-10
+
+- Replaced the selection tooltip style dropdown with Highlight, Underline and Note buttons.
+- Corrected shared select padding and line-height to fit compact toolbar heights without cropping text.
